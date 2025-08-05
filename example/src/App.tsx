@@ -1,41 +1,14 @@
-import { Text, StyleSheet, SafeAreaView, View, Pressable } from 'react-native';
-import { HelloFromSDK, multiply } from 'nuvei-sdk';
+import { StyleSheet} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-const result = multiply(3, 7);
+import HomePage from './modules/home/views/homePage';
+import { AppRoutes } from './routes/AppRouter';
 
 export default function App() {
   return (
     <NavigationContainer>
-      <SafeAreaView style={
-        {
-          display: 'flex',
-          alignItems: 'center'
-        }
-      }>
-        
-        
-        <View style={{flexDirection: 'row'}}>
-        <Text>NuveiSdk</Text>
-        <Pressable  onPress={()=>{
-          console.log('holaaa')
-        }} style={{
-          borderRadius: 20,
-          borderColor: '#121212',
-          borderWidth: 20
-        }}>
-          <Text>Init Simulation</Text>
-        </Pressable>
-        </View>
-        
-      </SafeAreaView>
+      <AppRoutes></AppRoutes>
     </NavigationContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+
