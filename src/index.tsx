@@ -1,4 +1,5 @@
 import NuveiSdk from './NativeNuveiSdk';
+import 'react-native-get-random-values';
 
 export function multiply(a: number, b: number): number {
   return NuveiSdk.multiply(a, b);

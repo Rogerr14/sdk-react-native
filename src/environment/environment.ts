@@ -1,3 +1,4 @@
+import type { ConfigBase } from "./base_config";
 import ProdEnv from "./prod_env";
 import TestEnv from "./test_env";
 

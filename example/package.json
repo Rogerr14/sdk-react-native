@@ -16,6 +16,7 @@
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "^2.27.2",
+    "react-native-get-random-values": "^1.11.0",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.13.1"
   },
@@ -30,6 +31,7 @@
     "@react-native/metro-config": "0.79.2",
     "@react-native/typescript-config": "0.79.2",
     "@types/react": "^19.0.0",
+    "@types/react-native-get-random-values": "^1.8.2",
     "react-native-builder-bob": "^0.40.13",
     "react-native-monorepo-config": "^0.1.9"
   },

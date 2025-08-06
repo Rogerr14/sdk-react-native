@@ -10,13 +10,14 @@ interface ButtonCustom{
 
 
 const ButtonCustom = ({name, onPress}: ButtonCustom) => {
+
+
   return (
     <>
-    <Pressable  onPress={()=> onPress()} style= {
-        {
-             
-        }
-    } >
+    <Pressable  onPress={()=> onPress && onPress()} style={({pressed})=> [
+      ButtonStyle.buttonStyle,
+      pressed && ButtonStyle.buttonPressed
+      ]} >
             <Text style={ButtonStyle.textSytle}>{name}</Text>
         </Pressable>
     </>
