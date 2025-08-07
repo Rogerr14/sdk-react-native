@@ -15,7 +15,7 @@ export default function HomePage(){
 
     return(
 
-        <SafeAreaView>
+        <SafeAreaView style={{flex:1}}>
             <View>
                 
             </View>

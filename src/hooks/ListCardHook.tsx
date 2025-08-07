@@ -43,7 +43,7 @@ const ListCardHook = (userId: string) => {
         {
           uid: userId
         }
-      , false);
+      , true);
       try {
         await interceptor.init();
         const response = await interceptor.request<ListCard>();
