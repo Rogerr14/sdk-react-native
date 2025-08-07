@@ -1,6 +1,7 @@
 import { createStackNavigator } from "@react-navigation/stack"
 import { useState } from "react"
 import { SafeAreaView, StatusBar, Text, View } from "react-native"
+import { FlatList } from "react-native-gesture-handler";
 
 
 
@@ -16,9 +17,11 @@ export default function HomePage(){
     return(
 
         <SafeAreaView style={{flex:1}}>
-            <View>
+            <FlatList data={[
                 
-            </View>
+            ]} renderItem={({item})=> <View>
+                <Text></Text>
+            </View>}/>
             
         </SafeAreaView>
     )
