@@ -43,8 +43,21 @@ const AddCardHook = () => {
     try {
       await interceptor.init();
       const response = await interceptor.request<AddCardResponse>();
-      console.log(response);
-      setAddCard(response);
+      console.log('status',response.card.status === 'rejected');
+      if(response.card.status === 'rejected'){
+        console.log('aqui')
+        setErrorAddCard(
+          {
+            type:'Error',
+            help:'',
+            description: 'Card rejected'
+          }
+        )
+        return;
+      }else{
+        console.log('aqui tambien')
+        setAddCard(response);
+      }
     } catch (err: any) {
       setAddCard(
         err.error || {

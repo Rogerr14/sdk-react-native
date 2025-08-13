@@ -14,7 +14,6 @@ const AddCardPage = () => {
       <ScreenWrapper
         isLoading={loadindAddCard}
         loadingText={loadindAddCard ? 'Delete Card...' : 'Reload card...'}
-        errorMessage={errorAddCard}
         onRetry={() => {}}
       >
         <KeyboardAvoidingView
@@ -34,7 +33,9 @@ const AddCardPage = () => {
               setLoadindAddCard(value);
             }}
             onError={(error) => {
-              setErrorAddCard(error.description);
+              Alert.alert('Error', error.description, [
+                { text: 'OK', },
+              ]);
             }}
           />
         </KeyboardAvoidingView>

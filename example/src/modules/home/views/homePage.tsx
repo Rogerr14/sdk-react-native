@@ -22,7 +22,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function HomePage() {
   const [selectedCard, setSelectedCard] = useState<CardListItem | null>(null);
   const navigation = useNavigation<NavigationProp>();
-  const { payment, isLoading, error, processPayment } = PaymentHook();
+  const { payment, isLoadingPayment, errorPayment, processPayment } = PaymentHook();
 
   const handleCardSelected = (card: CardListItem) => {
     console.log('Card selected:', card); // Para depuración
@@ -42,28 +42,30 @@ export default function HomePage() {
         tax_percentage: 0,
       },
     });
-    console.log(isLoading);
-    console.log(error);
-    console.log(payment);
+  
+    // console.log(isLoadingPayment);
+    // console.log(errorPayment);
+
   };
 
   useEffect(() => {
-    if (isLoading) return;
-    if (payment && !error) {
+    if (isLoadingPayment) return;
+    if (payment && !errorPayment) {
+      console.log(payment);
       Alert.alert('Payment ok', 'Payment has been processed successfully.', [
-        { text: 'OK', onPress: () => console.log('OK Pressed') },
+        { text: 'OK', onPress: () =>  {navigation.push('DetailsPayment', {paymentResponse:payment} )}},
       ]);
       setSelectedCard(null);
     }
 
-    if (error) {
+    if (errorPayment) {
       Alert.alert(
         'Payment Error',
-        `Error: ${error.type}\n${error.description}`,
+        `Error: ${errorPayment.type}\n${errorPayment.description}`,
         [{ text: 'OK', onPress: () => console.log('Error OK Pressed') }]
       );
     }
-  }, [payment, error, isLoading]);
+  }, [payment, errorPayment, isLoadingPayment]);
 
   const dataProducts: Product[] = [
     {
@@ -93,7 +95,7 @@ export default function HomePage() {
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 20 }}>
-      <ScreenWrapper isLoading={isLoading} loadingText="Procesando pago...">
+      <ScreenWrapper isLoading={isLoadingPayment} loadingText="Procesando pago...">
         {/* <View style={{padding:30, flex: 1}}> */}
 
         <FlatList

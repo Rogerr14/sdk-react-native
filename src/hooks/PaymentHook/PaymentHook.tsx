@@ -8,12 +8,12 @@ import type {
 
 const PaymentHook = () => {
   const [payment, setPayment] = useState<PaymentDebitResponse>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<ErrorModel['error'] | null>(null);
+  const [isLoadingPayment, setIsLoadingPayment] = useState<boolean>(false);
+  const [errorPayment, setErrorPayment] = useState<ErrorModel['error'] | null>(null);
 
   const processPayment = async (request: DebitPaymentRequest) => {
     if (!request.card || !request.order || !request.user) {
-      setError({
+      setErrorPayment({
         type: 'Invalid input',
         help: '',
         description: 'Payment data is required but is empty',
@@ -22,7 +22,7 @@ const PaymentHook = () => {
     }
 
     if (!NuveiSdk.isInitialized()) {
-      setError({
+      setErrorPayment({
         type: 'sdk_not_initialized',
         help: 'SDK not initialized',
         description: 'Nuvei SDK must be initialized before use',
@@ -38,15 +38,15 @@ const PaymentHook = () => {
       request,
       true
     );
-    setIsLoading(true);
-    setError(null);
+    setIsLoadingPayment(true);
+    setErrorPayment(null);
     try {
       await interceptor.init();
       const response = await interceptor.request<PaymentDebitResponse>();
       console.log(response);
       setPayment(response);
     } catch (err: any) {
-      setError(
+      setErrorPayment(
         err.error || {
           type: 'Invalid request',
           help: '',
@@ -54,14 +54,14 @@ const PaymentHook = () => {
         }
       );
     } finally {
-      setIsLoading(false);
+      setIsLoadingPayment(false);
     }
   };
 
   return {
-    isLoading,
+    isLoadingPayment,
     payment,
-    error,
+    errorPayment,
     processPayment,
   };
 };

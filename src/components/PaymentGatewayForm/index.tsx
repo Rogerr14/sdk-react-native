@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -56,7 +56,7 @@ const PaymentGatewayForm = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardInfo, setCardInfo] = useState<CardInfo>();
 
-  const { addCardProcess, errorAddCard } = AddCardHook();
+  const { addCardProcess, errorAddCard, addCard } = AddCardHook();
 
   const handleCardNumber = (value: string) => {
     const result = formatCardNumber(value);
@@ -82,7 +82,7 @@ const PaymentGatewayForm = ({
       const month = parseInt(monthStr!, 10);
       const year = 2000 + parseInt(yearStr!, 10);
 
-      const result = await addCardProcess({
+      await addCardProcess({
         user: userInfo,
         card: {
           number: cardNumber.replace(/\s/g, ''),
@@ -93,13 +93,27 @@ const PaymentGatewayForm = ({
           type: cardInfo?.typeCode,
         },
       });
-
-      if (errorAddCard) onError?.(errorAddCard);
-      else onSuccess?.(result!);
+      
+      // if (errorAddCard) onError?.(errorAddCard);
+      // else onSuccess?.(addCard!);
     } finally {
       onLoading?.(false);
     }
   };
+
+
+  useEffect(() => {
+    if(errorAddCard){
+      onError?.(errorAddCard)
+    }
+  }, [errorAddCard])
+  
+
+  useEffect(()=>{
+    if(addCard){
+      onSuccess?.(addCard)
+    }
+  },[addCard])
 
   return (
     <KeyboardAvoidingView

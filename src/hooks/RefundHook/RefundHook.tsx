@@ -4,12 +4,12 @@ import NuveiSdk from '../../NuveiSdk';
 import type { RefundRequest, RefundResponse } from './refund.interface';
 const RefundHook = () => {
   const [refund, setRefund] = useState<RefundResponse>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<ErrorModel['error'] | null>(null);
+  const [isLoadingRefund, setIsLoadingRefund] = useState<boolean>(false);
+  const [errorRefund, setErrorRefund] = useState<ErrorModel['error'] | null>(null);
 
   const processRefund = async (request: RefundRequest) => {
     if (!request.transaction) {
-      setError({
+      setErrorRefund({
         type: 'Invalid input',
         help: '',
         description: 'Transaction data is required but is empty',
@@ -18,7 +18,7 @@ const RefundHook = () => {
     }
 
     if (!NuveiSdk.isInitialized()) {
-      setError({
+      setErrorRefund({
         type: 'sdk_not_initialized',
         help: 'SDK not initialized',
         description: 'Nuvei SDK must be initialized before use',
@@ -33,14 +33,15 @@ const RefundHook = () => {
       request,
       true
     );
-    setIsLoading(true);
-    setError(null);
+    setIsLoadingRefund(true);
+    setErrorRefund(null);
     try {
+      await interceptor.init()
       const response = await interceptor.request<RefundResponse>();
       console.log(response);
       setRefund(response);
     } catch (err: any) {
-      setError(
+      setErrorRefund(
         err.error || {
           type: 'Invalid request',
           help: '',
@@ -48,11 +49,11 @@ const RefundHook = () => {
         }
       );
     } finally {
-      setIsLoading(false);
+      setIsLoadingRefund(false);
     }
   };
 
-  return { isLoading, refund, error, processRefund };
+  return { isLoadingRefund, refund, errorRefund, processRefund };
 };
 
 export default RefundHook;

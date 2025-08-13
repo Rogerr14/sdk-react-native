@@ -6,6 +6,7 @@ import AppBarComponent from '../shared/components/AppBar/AppBarComponent';
 import ListCardPage from '../modules/llist_cards/view/ListCardPage';
 import AddCardPage from '../modules/add_cards/view/AddCardPage';
 import type { RootStackParamList } from './navigations';
+import DetailsPaymentPage from '../modules/details_payment/views/DetailsPaymentPage';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -64,6 +65,17 @@ export const AppRoutes = () => {
           },
         }}
       />
+      <Stack.Screen
+        name="DetailsPayment"
+        component={DetailsPaymentPage}
+        options={{
+          headerShadowVisible: false,
+          headerMode: 'screen',
+          headerStyle: { backgroundColor: 'transparent' },
+          headerTitle: () => <AppBarComponent />,
+        }}
+      />
+
     </Stack.Navigator>
   );
 };
