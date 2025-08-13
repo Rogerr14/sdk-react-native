@@ -3069,6 +3069,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/normalize-colors@npm:<0.73.0":
+  version: 0.72.0
+  resolution: "@react-native/normalize-colors@npm:0.72.0"
+  checksum: c8ec577663394a3390eb34c3cd531350521172bcfad7de309ab111e5f9e3d27c966d4a4387f00972302107be3d8cad584c5794ccfa30939aecc56162e4ddbe25
+  languageName: node
+  linkType: hard
+
 "@react-native/typescript-config@npm:0.79.2":
   version: 0.79.2
   resolution: "@react-native/typescript-config@npm:0.79.2"
@@ -3127,6 +3134,22 @@ __metadata:
     "@react-native-masked-view/masked-view":
       optional: true
   checksum: 254f9408d0f98a93d341c9262ccd80e4a8b1680236dc49cdc6d2eb307f73fae269203e9dce89f35baeb753938b480eeffcf436032d4f7d6a84bbcb2110e402f6
+  languageName: node
+  linkType: hard
+
+"@react-navigation/native-stack@npm:^7.3.24":
+  version: 7.3.24
+  resolution: "@react-navigation/native-stack@npm:7.3.24"
+  dependencies:
+    "@react-navigation/elements": ^2.6.2
+    warn-once: ^0.1.1
+  peerDependencies:
+    "@react-navigation/native": ^7.1.17
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-safe-area-context: ">= 4.0.0"
+    react-native-screens: ">= 4.0.0"
+  checksum: 56e89a04039b1a4d8c97e6c6383aae2e0cc5beb47e039d1853182b09ccc7b7c47391d5e7ad0dd6593e054eabb95f9928e966ca5ac3dcaab518f46ea89bb50021
   languageName: node
   linkType: hard
 
@@ -5465,6 +5488,17 @@ __metadata:
   version: 2.0.0
   resolution: "depd@npm:2.0.0"
   checksum: abbe19c768c97ee2eed6282d8ce3031126662252c58d711f646921c9623f9052e3e1906443066beec1095832f534e57c523b7333f8e7e0d93051ab6baef5ab3a
+  languageName: node
+  linkType: hard
+
+"deprecated-react-native-prop-types@npm:^4.0.0":
+  version: 4.2.3
+  resolution: "deprecated-react-native-prop-types@npm:4.2.3"
+  dependencies:
+    "@react-native/normalize-colors": <0.73.0
+    invariant: ^2.2.4
+    prop-types: ^15.8.1
+  checksum: 294752f9f15733b66473022d8258a14aac850e4a3db7e802ef189a09871236f5a110f8fe588468ae1df92f24641ae29de05943074dc54da02a5e4262935f913d
   languageName: node
   linkType: hard
 
@@ -9699,6 +9733,7 @@ __metadata:
     "@react-native/metro-config": 0.79.2
     "@react-native/typescript-config": 0.79.2
     "@react-navigation/native": ^7.1.17
+    "@react-navigation/native-stack": ^7.3.24
     "@react-navigation/stack": ^7.4.5
     "@types/react": ^19.0.0
     "@types/react-native-get-random-values": ^1.8.2
@@ -9707,6 +9742,7 @@ __metadata:
     react-native-builder-bob: ^0.40.13
     react-native-gesture-handler: ^2.27.2
     react-native-get-random-values: ^1.11.0
+    react-native-linear-gradient: ^2.8.3
     react-native-monorepo-config: ^0.1.9
     react-native-safe-area-context: ^5.5.2
     react-native-screens: ^4.13.1
@@ -9741,6 +9777,8 @@ __metadata:
     react: 19.0.0
     react-native: 0.79.2
     react-native-builder-bob: ^0.40.13
+    react-native-flip-card: ^3.5.7
+    react-native-linear-gradient: ^2.8.3
     release-it: ^17.10.0
     turbo: ^1.10.7
     typescript: ^5.8.3
@@ -10627,6 +10665,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-flip-card@npm:^3.5.7":
+  version: 3.5.7
+  resolution: "react-native-flip-card@npm:3.5.7"
+  dependencies:
+    deprecated-react-native-prop-types: ^4.0.0
+    prop-types: ^15.8.1
+  checksum: 815126a104f7c0e6eb5fc6504ec627f43e96d411672bedc4ebf2a562a1f782dd55964b6c3abdb3769c4e5c035cbf2940e0c011e5a6d21c53fa6505e8c6952003
+  languageName: node
+  linkType: hard
+
 "react-native-gesture-handler@npm:^2.27.2":
   version: 2.28.0
   resolution: "react-native-gesture-handler@npm:2.28.0"
@@ -10659,6 +10707,16 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 8fb6d8ab7b953c7d7cec8c987cef24f1c5348a293a85cb49c7c53b54ef110c0ca746736ae730e297603c8c76020df912e93915fb17518c4f2f91143757177aba
+  languageName: node
+  linkType: hard
+
+"react-native-linear-gradient@npm:^2.8.3":
+  version: 2.8.3
+  resolution: "react-native-linear-gradient@npm:2.8.3"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: f980d324e551bbc475c6406bdc5250a08242020cbe653412fa169bbdf51e28a502e225de105b4d696d6a1a1b733d44782469020f4936d8b3ce0e2c78e51cf58f
   languageName: node
   linkType: hard
 
@@ -12544,7 +12602,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"warn-once@npm:^0.1.0":
+"warn-once@npm:^0.1.0, warn-once@npm:^0.1.1":
   version: 0.1.1
   resolution: "warn-once@npm:0.1.1"
   checksum: e6a5a1f5a8dba7744399743d3cfb571db4c3947897875d4962a7c5b1bf2195ab4518c838cb4cea652e71729f21bba2e98dc75686f5fccde0fabbd894e2ed0c0d

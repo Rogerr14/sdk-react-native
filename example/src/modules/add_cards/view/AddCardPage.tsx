@@ -1,0 +1,46 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { PaymentGatewayForm } from '../../../../../src/components';
+import { useNavigation } from '@react-navigation/native';
+import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import ScreenWrapper from '../../../shared/components/layout/LayoutScreen';
+import { useState } from 'react';
+
+const AddCardPage = () => {
+  const [errorAddCard, setErrorAddCard] = useState<string>('');
+  const [loadindAddCard, setLoadindAddCard] = useState(false);
+  const navigation = useNavigation();
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScreenWrapper
+        isLoading={loadindAddCard}
+        loadingText={loadindAddCard ? 'Delete Card...' : 'Reload card...'}
+        errorMessage={errorAddCard}
+        onRetry={() => {}}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
+          <PaymentGatewayForm
+            showHolderName={true}
+            userInfo={{ email: 'test@example.com', id: '4' }}
+            onSuccess={() => {
+              Alert.alert('Alert', 'Card added successfully', [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            }}
+            onLoading={(value) => {
+              setLoadindAddCard(value);
+            }}
+            onError={(error) => {
+              setErrorAddCard(error.description);
+            }}
+          />
+        </KeyboardAvoidingView>
+      </ScreenWrapper>
+    </SafeAreaView>
+  );
+};
+
+export default AddCardPage;

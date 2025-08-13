@@ -1,6 +1,4 @@
-
-
-export abstract class ConfigBase{
-     abstract environment: string
-     abstract urlBase: string
+export abstract class ConfigBase {
+  abstract environment: string;
+  abstract urlBase: string;
 }

@@ -1,43 +1,52 @@
+import { Image, Text, View } from 'react-native';
+import ButtonCustom from '../../../shared/components/ButtonComponent/ButtonCustom';
+import NuveiSdk from '../../../../../src/NuveiSdk';
+import { NUVEI_ENV } from '../../../shared/utils/constants';
+import { useEffect } from 'react';
+import { StackActions, useNavigation } from '@react-navigation/native';
+import { setLanguage } from '../../../../../src/i18n';
 
-
-import { ActivityIndicator, Image, Text, View } from 'react-native'
-import ButtonCustom from '../../../shared/components/ButtonComponent/ButtonCustom'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import NuveiSdk from '../../../../../src/NuveiSdk'
-import { NUVEI_ENV } from '../../../shared/utils/constants'
-import ListCardHook from '../../../../../src/hooks/ListCardHook'
-import { useEffect } from 'react'
-import { StackActions, useNavigation } from '@react-navigation/native'
-
-export const PresentationPage = ()=> {
+export const PresentationPage = () => {
   // const {cards, isLoading, error, getCards} = ListCardHook('4');
 
+  useEffect(() => {
+    setLanguage('en');
+    NuveiSdk.initEnvironmet(
+      NUVEI_ENV.APP_CODE,
+      NUVEI_ENV.APP_KEY,
+      NUVEI_ENV.SERVER_CODE,
+      NUVEI_ENV.SERVER_KEY,
+      true
+    );
+  });
   const navigation = useNavigation();
 
   return (
-    <View style={{flex:1, justifyContent: 'center', alignItems:'center'}}>
-      <View style= {{display:'flex', flexDirection:'row', alignItems:'flex-end'}}>
-        <Image
-        source={require('../../../assets/logo-nuvei.png')}
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View
         style={{
-          width:200
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'flex-end',
         }}
-        resizeMode='contain'
-        ></Image>
+      >
+        <Image
+          source={require('../../../assets/logo-nuvei.png')}
+          style={{
+            width: 200,
+          }}
+          resizeMode="contain"
+        />
         <Text>Sdk</Text>
-        
       </View>
-      <ButtonCustom name='Init Simulation' onPress={()=>{
-        navigation.dispatch(
-          StackActions.replace('Home')
-        )
-      }}></ButtonCustom>
+      <ButtonCustom
+        name="Init Simulation"
+        onPress={() => {
+          navigation.dispatch(StackActions.replace('Home'));
+        }}
+      />
     </View>
-  )
-  // useEffect(()=>{
-  //   NuveiSdk.initEnvironmet(NUVEI_ENV.APP_CODE,NUVEI_ENV.APP_KEY, NUVEI_ENV.SERVER_CODE, NUVEI_ENV.SERVER_KEY, true);
-    
-  // })
+  );
 
   // const handleGetCards= ()=>{
   //   getCards()
@@ -62,9 +71,6 @@ export const PresentationPage = ()=> {
   //   );
   // }
 
-
-
-
   // return (
   //   <SafeAreaView style={{ flex: 1 }}>
   //   <View
@@ -85,12 +91,12 @@ export const PresentationPage = ()=> {
   //           <Text>Número: {card.number}</Text>
   //           <Text>Token: {card.type}</Text>
   //           <Text>Token: {card.token}</Text>
-            
+
   //         </View>
   //       ))
   //     )}
   //   </View>
   // </SafeAreaView>
-    
+
   // )
-}
+};

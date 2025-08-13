@@ -1,14 +1,15 @@
 import NuveiSdk from './NativeNuveiSdk';
-import 'react-native-get-random-values';
+export * from './hooks';
+export * from './i18n';
 
 export function multiply(a: number, b: number): number {
   return NuveiSdk.multiply(a, b);
 }
-export {HelloFromSDK}
+export { HelloFromSDK };
 
 import { Text, View, StyleSheet } from 'react-native';
 
- const HelloFromSDK = () => {
+const HelloFromSDK = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Hola desde Nuvei SDK!</Text>

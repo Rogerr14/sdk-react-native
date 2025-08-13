@@ -4,14 +4,11 @@ sdk
 
 ## Installation
 
-
 ```sh
 npm install nuvei-sdk
 ```
 
-
 ## Usage
-
 
 ```js
 import { multiply } from 'nuvei-sdk';
@@ -20,7 +17,6 @@ import { multiply } from 'nuvei-sdk';
 
 const result = multiply(3, 7);
 ```
-
 
 ## Contributing
 
