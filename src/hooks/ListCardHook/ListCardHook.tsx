@@ -49,10 +49,14 @@ const ListCardHook = () => {
       await interceptor.init();
       const response = await interceptor.request<ListCardResponse>();
       const listCard = response.cards.map((card) => {
+
         const { icon } = getCardInfo(card.number);
         return { ...card, icon };
       });
-      setCardsList({ ...response, cards: listCard });
+      const validCards = listCard.filter(
+        (card) => card.status === 'valid'
+      ) ?? [];
+      setCardsList({ ...response, cards: validCards });
     } catch (err: any) {
       setErrorList(
         err.error || {

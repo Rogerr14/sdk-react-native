@@ -23,8 +23,11 @@ import {
   validateHolderName,
   validateExpiryDate,
   validateSecurityCode,
+  valideOTPCode,
 } from './validations';
 import { t } from '../../i18n';
+import useVerifyOtpHook from '../../hooks/AddCardHook/VerifyOtpHook';
+import type { OtpResponse } from '../../hooks/AddCardHook/otp.interface';
 
 export interface PaymentGatewayFormProps {
   userInfo: UserInfoAdd;
@@ -37,8 +40,10 @@ export interface PaymentGatewayFormProps {
     errorColor?: string;
   };
   onSuccess?: (response: AddCardResponse) => void;
+  onVerifyOtp?: (response: OtpResponse)=>void; 
   onError?: (response: ErrorModel['error']) => void;
   onLoading?: (isLoading: boolean) => void;
+  moreInfoOtp?: boolean
 }
 
 const PaymentGatewayForm = ({
@@ -48,16 +53,20 @@ const PaymentGatewayForm = ({
   onSuccess,
   onError,
   onLoading,
+  onVerifyOtp,
+  moreInfoOtp = false
 }: PaymentGatewayFormProps) => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardholderName, setCardholderName] = useState('');
   const [dateExpiry, setDateExpiry] = useState('');
   const [securityCode, setSecurityCode] = useState('');
+  const [otpCode, setOtpCode] = useState("");
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardInfo, setCardInfo] = useState<CardInfo>();
+  const [isOtp, setIsOtp] = useState<boolean>(false);
 
   const { addCardProcess, errorAddCard, addCard } = AddCardHook();
-
+  const {verifyByOtp, errorOtp, otpVerify} = useVerifyOtpHook();
   const handleCardNumber = (value: string) => {
     const result = formatCardNumber(value);
     setCardNumber(result);
@@ -71,7 +80,8 @@ const PaymentGatewayForm = ({
     !validateCardNumber(cardNumber) &&
     !validateHolderName(cardholderName, showHolderName) &&
     !validateExpiryDate(dateExpiry) &&
-    !validateSecurityCode(securityCode, cardInfo?.cvcNumber);
+    !validateSecurityCode(securityCode, cardInfo?.cvcNumber) &&
+    !(isOtp && valideOTPCode(otpCode));
 
   const handleAddCardPress = async () => {
     if (!isFormValid) return;
@@ -93,6 +103,7 @@ const PaymentGatewayForm = ({
           type: cardInfo?.typeCode,
         },
       });
+
       
       // if (errorAddCard) onError?.(errorAddCard);
       // else onSuccess?.(addCard!);
@@ -102,18 +113,58 @@ const PaymentGatewayForm = ({
   };
 
 
+  const handleVerifyOtp = async()=>{
+    if(!isFormValid) return;
+    onLoading?.(true);
+
+    try {
+      await verifyByOtp({user:{
+       id: userInfo.id 
+      }, transaction:{
+        id:addCard?.card.transaction_reference ?? ''
+      },
+      value: otpCode,
+      type:'BY_OTP',
+      more_info: moreInfoOtp
+    })
+      
+    } finally{
+      onLoading?.(false);
+    }
+  }
+
+
   useEffect(() => {
     if(errorAddCard){
       onError?.(errorAddCard)
     }
-  }, [errorAddCard])
+    if(errorOtp){
+      onError?.(errorOtp)
+    }
+  }, [errorAddCard, errorOtp])
   
 
   useEffect(()=>{
     if(addCard){
-      onSuccess?.(addCard)
+      switch (addCard.card.status) {
+        case 'valid':
+          onSuccess?.(addCard)
+          break;
+        case 'pending':
+          setIsOtp(true)
+          break;
+        default:
+          onSuccess?.(addCard)
+          break;
+      }
     }
   },[addCard])
+
+  useEffect(()=>{
+    if(otpVerify){
+      onVerifyOtp?.(otpVerify)
+    }
+  },[otpVerify])
 
   return (
     <KeyboardAvoidingView
@@ -145,6 +196,7 @@ const PaymentGatewayForm = ({
           value={cardNumber}
           onChangeText={handleCardNumber}
           maxLength={19}
+          editable={!isOtp}
           allowedChars={/^[0-9 ]*$/}
           setIsFlipped={setIsFlipped}
           isFlipped={false}
@@ -160,6 +212,7 @@ const PaymentGatewayForm = ({
             placeholder="John Doe"
             forceUppercase={true}
             value={cardholderName}
+            editable={!isOtp}
             onChangeText={setCardholderName}
             maxLength={20}
             validation={(v) => validateHolderName(v, showHolderName)}
@@ -179,10 +232,11 @@ const PaymentGatewayForm = ({
               label={t('forms.expiryDate')}
               placeholder="MM/YY"
               value={dateExpiry}
+              editable={!isOtp}
               onChangeText={handleExpiryChange}
               maxLength={5}
               keyboardType="numeric"
-              validation={validateExpiryDate}
+              validation={(v)=>validateExpiryDate(v)}
               setIsFlipped={setIsFlipped}
               isFlipped={false}
               labelStyle={{ color: theme.labelColor || '#000' }}
@@ -195,6 +249,7 @@ const PaymentGatewayForm = ({
               label={t('forms.securityCode')}
               placeholder="CCV/CVV"
               value={securityCode}
+              editable={!isOtp}
               onChangeText={setSecurityCode}
               maxLength={cardInfo?.cvcNumber || 3}
               keyboardType="numeric"
@@ -207,6 +262,23 @@ const PaymentGatewayForm = ({
             />
           </View>
         </View>
+        {isOtp && (
+          <ShadowInput
+            label={t('forms.otpCode')}
+            placeholder="123456"
+            value={otpCode}
+            onChangeText={setOtpCode}
+            maxLength={6}
+            setIsFlipped={setIsFlipped}
+            
+            validation={(v)=>valideOTPCode(v)}
+            isFlipped={false}
+            allowedChars={/^[0-9 ]*$/}
+            labelStyle={{ color: theme.labelColor || '#000' }}
+            inputStyle={{ color: theme.inputTextColor || '#000' }}
+            errorStyle={{ color: theme.errorColor || 'red' }}
+          />
+        )}
 
         {/* Botón */}
         <Pressable
@@ -215,7 +287,7 @@ const PaymentGatewayForm = ({
             { backgroundColor: theme.buttonColor || '#000' },
             !isFormValid && styles.disabledButton,
           ]}
-          onPress={handleAddCardPress}
+          onPress={isOtp ? handleVerifyOtp :handleAddCardPress}
           disabled={!isFormValid}
         >
           <Text
@@ -224,7 +296,7 @@ const PaymentGatewayForm = ({
               textAlign: 'center',
             }}
           >
-            Add Card
+            {isOtp ? 'Verify Code' :'Add Card'}
           </Text>
         </Pressable>
       </ScrollView>

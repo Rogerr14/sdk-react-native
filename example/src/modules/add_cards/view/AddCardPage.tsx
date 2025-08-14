@@ -37,6 +37,11 @@ const AddCardPage = () => {
                 { text: 'OK', },
               ]);
             }}
+            onVerifyOtp={() => {
+              Alert.alert('Alert', 'Card added successfully', [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            }}
           />
         </KeyboardAvoidingView>
       </ScreenWrapper>

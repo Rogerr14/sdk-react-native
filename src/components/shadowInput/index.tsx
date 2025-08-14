@@ -149,6 +149,7 @@ export interface ShadowInputProps {
   value: string;
   onChangeText: (text: string) => void;
   maxLength?: number;
+  editable?: boolean,
   keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
   setIsFlipped?: (flipped: boolean) => void;
   isFlipped?: boolean;
@@ -170,6 +171,7 @@ const ShadowInput = ({
   keyboardType = 'default',
   setIsFlipped,
   isFlipped,
+  editable = true, 
   validation,
   allowedChars,
   labelStyle,
@@ -228,6 +230,7 @@ const ShadowInput = ({
           style={[styles.input, inputStyle]}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          editable={editable}
           onChangeText={handleChangeText}
           value={value}
           maxLength={maxLength}

@@ -1,6 +1,7 @@
 import NuveiSdk from './NativeNuveiSdk';
 export * from './hooks';
 export * from './i18n';
+export * from './components';
 
 export function multiply(a: number, b: number): number {
   return NuveiSdk.multiply(a, b);

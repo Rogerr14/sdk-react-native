@@ -60,3 +60,13 @@ export function validateSecurityCode(
   if (cvv.trim().length !== required) return t('errorForms.cvcError');
   return '';
 }
+
+
+export function valideOTPCode(
+  otpCode: string
+):string{
+  const required = 6
+  if (otpCode.trim().length != required) return t('errorForms.otpError');
+  return ''
+}
+

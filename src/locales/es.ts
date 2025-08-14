@@ -4,6 +4,7 @@ export default {
     cardNumber: 'Número de tarjeta',
     expiryDate: 'Fecha Expiración',
     securityCode: 'CVV/CVVC',
+    otpCode: 'Código otp'
   },
   errorForms: {
     holderNameError: 'El nombre no es válido',

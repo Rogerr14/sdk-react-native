@@ -3,6 +3,7 @@ import type ErrorModel from '../../interfaces/error.interface';
 import type { AddCardRequest, AddCardResponse } from './addCard.interface';
 import NuveiSdk from '../../NuveiSdk';
 
+
 const AddCardHook = () => {
   const [isLoadingAddCard, setIsLoadingAddCard] = useState<boolean>(false);
   const [errorAddCard, setErrorAddCard] = useState<ErrorModel['error'] | null>(

@@ -2,7 +2,7 @@ import Environment from './environment/environment';
 import InterceptorHttp from './http/interceptor';
 import type ErrorModel from './interfaces/error.interface';
 
-export * from './components';
+
 
 class NuveiSdk {
   private static instance: NuveiSdk;
