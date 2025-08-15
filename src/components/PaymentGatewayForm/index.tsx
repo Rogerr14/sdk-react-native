@@ -7,6 +7,11 @@ import {
   Pressable,
   Text,
   StyleSheet,
+  Modal,
+  Button,
+  Alert,
+  Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import type { CardInfo } from './interfaces';
 import { formatCardNumber, formatExpiry, getCardInfo } from './helpers';
@@ -28,6 +33,7 @@ import {
 import { t } from '../../i18n';
 import useVerifyOtpHook from '../../hooks/AddCardHook/VerifyOtpHook';
 import type { OtpResponse } from '../../hooks/AddCardHook/otp.interface';
+import WebView from 'react-native-webview';
 
 export interface PaymentGatewayFormProps {
   userInfo: UserInfoAdd;
@@ -40,7 +46,7 @@ export interface PaymentGatewayFormProps {
     errorColor?: string;
   };
   onSuccess?: (response: AddCardResponse) => void;
-  onVerifyOtp?: (response: OtpResponse)=>void; 
+  onVerifyOtp?: (response: OtpResponse) => void;
   onError?: (response: ErrorModel['error']) => void;
   onLoading?: (isLoading: boolean) => void;
   moreInfoOtp?: boolean
@@ -64,9 +70,10 @@ const PaymentGatewayForm = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardInfo, setCardInfo] = useState<CardInfo>();
   const [isOtp, setIsOtp] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const { addCardProcess, errorAddCard, addCard } = AddCardHook();
-  const {verifyByOtp, errorOtp, otpVerify} = useVerifyOtpHook();
+  const { verifyByOtp, errorOtp, otpVerify } = useVerifyOtpHook();
   const handleCardNumber = (value: string) => {
     const result = formatCardNumber(value);
     setCardNumber(result);
@@ -104,7 +111,7 @@ const PaymentGatewayForm = ({
         },
       });
 
-      
+
       // if (errorAddCard) onError?.(errorAddCard);
       // else onSuccess?.(addCard!);
     } finally {
@@ -113,39 +120,40 @@ const PaymentGatewayForm = ({
   };
 
 
-  const handleVerifyOtp = async()=>{
-    if(!isFormValid) return;
+  const handleVerifyOtp = async () => {
+    if (!isFormValid) return;
     onLoading?.(true);
 
     try {
-      await verifyByOtp({user:{
-       id: userInfo.id 
-      }, transaction:{
-        id:addCard?.card.transaction_reference ?? ''
-      },
-      value: otpCode,
-      type:'BY_OTP',
-      more_info: moreInfoOtp
-    })
-      
-    } finally{
+      await verifyByOtp({
+        user: {
+          id: userInfo.id
+        }, transaction: {
+          id: addCard?.card.transaction_reference ?? ''
+        },
+        value: otpCode,
+        type: 'BY_OTP',
+        more_info: moreInfoOtp
+      })
+
+    } finally {
       onLoading?.(false);
     }
   }
 
 
   useEffect(() => {
-    if(errorAddCard){
+    if (errorAddCard) {
       onError?.(errorAddCard)
     }
-    if(errorOtp){
+    if (errorOtp) {
       onError?.(errorOtp)
     }
   }, [errorAddCard, errorOtp])
-  
 
-  useEffect(()=>{
-    if(addCard){
+
+  useEffect(() => {
+    if (addCard) {
       switch (addCard.card.status) {
         case 'valid':
           onSuccess?.(addCard)
@@ -158,19 +166,50 @@ const PaymentGatewayForm = ({
           break;
       }
     }
-  },[addCard])
+  }, [addCard])
 
-  useEffect(()=>{
-    if(otpVerify){
+  useEffect(() => {
+    if (otpVerify) {
       onVerifyOtp?.(otpVerify)
     }
-  },[otpVerify])
+  }, [otpVerify])
 
   return (
+
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
+      
+      <Modal
+        animationType="slide"
+        transparent={true}
+        style= {styles.modalView}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert('Modal has been closed.');
+          // setModalVisible(!modalVisible);
+        }}>
+     
+      <WebView
+        style={styles.webView} // Estilo específico para el WebView
+        originWhitelist={['*']}
+        source={{
+          html:"<!DOCTYPE html SYSTEM 'about:legacy-compat'><html class='no-js' lang='en'xmlns='http://www.w3.org/1999/xhtml'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta charset='utf-8'/></head><body OnLoad='OnLoadEvent();'><form action='https://ccapi-stg.paymentez.com/v2/3ds/mockchallenge' method='POST' id='threeD' name='threeD'>message_id: <input type='area' id='message_id' name='message_id' value='AU-106430' />;creq: <input type='area' id='creq'name='creq' value='ewogICAiYWNzVHJhbnNJRCIgOiAiMjZjZGI3ZjAtOTE0My00M2I0LTlhM2YtYWUwZWE1MzUyMzhjIiwKICA' />; \"term_url: <input type='area' id='term_url' name='term_url' value='https://lantechco.ec/img/callback3DS.php' />;\n            <input type='submit' value='proceed to issuer'></form><script language='Javascript'>document.getElementById('threeD').submit(); </script></body></body></html>"
+        }}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.warn('WebView error: ', nativeEvent);
+        }}
+        // onMessage={(event)=>{if(event.nativeEvent.){console.log('hola')}}}
+        onLoad={() => console.log('WebView loaded')}
+        javaScriptEnabled={true}
+        onSourceChanged={()=> console.log('dasds')}
+        onContentProcessDidTerminate={()=>{console.log('sdasds')}}
+        domStorageEnabled={true}
+      />
+      <Button title='dimiss' onPress={()=>setModalVisible(false)}/>
+      </Modal>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16 }}
@@ -236,7 +275,7 @@ const PaymentGatewayForm = ({
               onChangeText={handleExpiryChange}
               maxLength={5}
               keyboardType="numeric"
-              validation={(v)=>validateExpiryDate(v)}
+              validation={(v) => validateExpiryDate(v)}
               setIsFlipped={setIsFlipped}
               isFlipped={false}
               labelStyle={{ color: theme.labelColor || '#000' }}
@@ -270,8 +309,8 @@ const PaymentGatewayForm = ({
             onChangeText={setOtpCode}
             maxLength={6}
             setIsFlipped={setIsFlipped}
-            
-            validation={(v)=>valideOTPCode(v)}
+
+            validation={(v) => valideOTPCode(v)}
             isFlipped={false}
             allowedChars={/^[0-9 ]*$/}
             labelStyle={{ color: theme.labelColor || '#000' }}
@@ -287,7 +326,7 @@ const PaymentGatewayForm = ({
             { backgroundColor: theme.buttonColor || '#000' },
             !isFormValid && styles.disabledButton,
           ]}
-          onPress={isOtp ? handleVerifyOtp :handleAddCardPress}
+          onPress={isOtp ? handleVerifyOtp : handleAddCardPress}
           disabled={!isFormValid}
         >
           <Text
@@ -296,11 +335,13 @@ const PaymentGatewayForm = ({
               textAlign: 'center',
             }}
           >
-            {isOtp ? 'Verify Code' :'Add Card'}
+            {isOtp ? 'Verify Code' : 'Add Card'}
           </Text>
         </Pressable>
+        <Button title='ver modal' onPress={() => setModalVisible(true)} />
       </ScrollView>
     </KeyboardAvoidingView>
+
   );
 };
 
@@ -308,6 +349,48 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', marginTop: 8 },
   button: { marginTop: 16, paddingVertical: 12, borderRadius: 8 },
   disabledButton: { backgroundColor: '#888' },
+  modalView: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 40,
+    width: Dimensions.get('window').width * 0.9, // 90% del ancho de la pantalla
+    height: Dimensions.get('window').height * 0.7, // 70% del alto de la pantalla
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  webView: {
+    justifyContent:'center',
+    // flex:1,
+    marginTop:60,
+    borderRadius:20,
+    padding:20,
+    marginBottom:20,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center', // Centra verticalmente
+    alignItems: 'center', // Centra horizontalmente
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semitransparente
+  },
+  buttonClose: {
+    backgroundColor: '#2196F3',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
 });
 
 export default PaymentGatewayForm;
