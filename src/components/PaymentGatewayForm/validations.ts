@@ -62,11 +62,10 @@ export function validateSecurityCode(
 }
 
 
-export function valideOTPCode(
-  otpCode: string
-):string{
-  const required = 6
-  if (otpCode.trim().length != required) return t('errorForms.otpError');
-  return ''
+export function validateOTPCode(otpCode: string, isValid?: boolean): string {
+  const required = 6;
+  if (otpCode.trim().length !== required) return t('errorForms.otpError');
+  if (isValid === false) return t('errors.otpNotValid');
+  return '';
 }
 

@@ -11,15 +11,15 @@ import {
   Button,
   Alert,
   Dimensions,
-  SafeAreaView,
 } from 'react-native';
 import type { CardInfo } from './interfaces';
 import { formatCardNumber, formatExpiry, getCardInfo } from './helpers';
 import AnimatedCardFlip from '../FlipCard';
 import ShadowInput from '../shadowInput';
-import type {
-  AddCardResponse,
-  UserInfoAdd,
+import {
+  // BrowserInfo,
+  type AddCardResponse,
+  type UserInfoAdd,
 } from '../../hooks/AddCardHook/addCard.interface';
 import AddCardHook from '../../hooks/AddCardHook/AddCardHook';
 import type ErrorModel from '../../interfaces/error.interface';
@@ -28,7 +28,7 @@ import {
   validateHolderName,
   validateExpiryDate,
   validateSecurityCode,
-  valideOTPCode,
+  validateOTPCode,
 } from './validations';
 import { t } from '../../i18n';
 import useVerifyOtpHook from '../../hooks/AddCardHook/VerifyOtpHook';
@@ -70,7 +70,9 @@ const PaymentGatewayForm = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardInfo, setCardInfo] = useState<CardInfo>();
   const [isOtp, setIsOtp] = useState<boolean>(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [validOtp, setValidOtp]  =  useState<boolean>(true);
+  const [validate3ds, setValidate3ds] = useState<boolean>(false);
+
 
   const { addCardProcess, errorAddCard, addCard } = AddCardHook();
   const { verifyByOtp, errorOtp, otpVerify } = useVerifyOtpHook();
@@ -80,6 +82,8 @@ const PaymentGatewayForm = ({
     setCardInfo(getCardInfo(result));
   };
 
+
+
   const handleExpiryChange = (value: string) =>
     setDateExpiry(formatExpiry(value));
 
@@ -88,7 +92,7 @@ const PaymentGatewayForm = ({
     !validateHolderName(cardholderName, showHolderName) &&
     !validateExpiryDate(dateExpiry) &&
     !validateSecurityCode(securityCode, cardInfo?.cvcNumber) &&
-    !(isOtp && valideOTPCode(otpCode));
+    !(isOtp && validateOTPCode(otpCode));
 
   const handleAddCardPress = async () => {
     if (!isFormValid) return;
@@ -109,6 +113,9 @@ const PaymentGatewayForm = ({
           cvc: securityCode,
           type: cardInfo?.typeCode,
         },
+        // extra_params:{
+        //   browser_info: browserInfo
+        // }
       });
 
 
@@ -119,13 +126,24 @@ const PaymentGatewayForm = ({
     }
   };
 
+  const clearAllForms =()=>{
+    setCardNumber("")
+    setCardholderName("")
+    setDateExpiry("")
+    setSecurityCode("")
+    setOtpCode("")
+    setValidOtp(true)
+    setIsOtp(false)
+    setCardInfo(undefined)
+  }
+
 
   const handleVerifyOtp = async () => {
     if (!isFormValid) return;
     onLoading?.(true);
 
     try {
-      await verifyByOtp({
+       await verifyByOtp({
         user: {
           id: userInfo.id
         }, transaction: {
@@ -135,6 +153,9 @@ const PaymentGatewayForm = ({
         type: 'BY_OTP',
         more_info: moreInfoOtp
       })
+
+
+
 
     } finally {
       onLoading?.(false);
@@ -147,7 +168,11 @@ const PaymentGatewayForm = ({
       onError?.(errorAddCard)
     }
     if (errorOtp) {
-      onError?.(errorOtp)
+      if(errorOtp.type.includes('VerificationError')){
+        clearAllForms()
+      }else{
+        onError?.(errorOtp)
+      }
     }
   }, [errorAddCard, errorOtp])
 
@@ -161,6 +186,14 @@ const PaymentGatewayForm = ({
         case 'pending':
           setIsOtp(true)
           break;
+        case 'review':
+          setValidate3ds(true)
+          // setChallengeHtml(addCard['3ds'].browser_response.challenge_request)
+          break;
+        case 'rejected':
+          clearAllForms()
+          onSuccess?.(addCard)  
+          break;
         default:
           onSuccess?.(addCard)
           break;
@@ -169,8 +202,13 @@ const PaymentGatewayForm = ({
   }, [addCard])
 
   useEffect(() => {
-    if (otpVerify) {
-      onVerifyOtp?.(otpVerify)
+    if (otpVerify ) {
+      if(otpVerify.status_detail === 33){
+        setOtpCode("")
+        setValidOtp(false)
+      }else{
+        onVerifyOtp?.(otpVerify)
+      }
     }
   }, [otpVerify])
 
@@ -185,30 +223,40 @@ const PaymentGatewayForm = ({
         animationType="slide"
         transparent={true}
         style= {styles.modalView}
-        visible={modalVisible}
+        visible={validate3ds}
         onRequestClose={() => {
           Alert.alert('Modal has been closed.');
           // setModalVisible(!modalVisible);
         }}>
-     
-      <WebView
-        style={styles.webView} // Estilo específico para el WebView
-        originWhitelist={['*']}
-        source={{
-          html:"<!DOCTYPE html SYSTEM 'about:legacy-compat'><html class='no-js' lang='en'xmlns='http://www.w3.org/1999/xhtml'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta charset='utf-8'/></head><body OnLoad='OnLoadEvent();'><form action='https://ccapi-stg.paymentez.com/v2/3ds/mockchallenge' method='POST' id='threeD' name='threeD'>message_id: <input type='area' id='message_id' name='message_id' value='AU-106430' />;creq: <input type='area' id='creq'name='creq' value='ewogICAiYWNzVHJhbnNJRCIgOiAiMjZjZGI3ZjAtOTE0My00M2I0LTlhM2YtYWUwZWE1MzUyMzhjIiwKICA' />; \"term_url: <input type='area' id='term_url' name='term_url' value='https://lantechco.ec/img/callback3DS.php' />;\n            <input type='submit' value='proceed to issuer'></form><script language='Javascript'>document.getElementById('threeD').submit(); </script></body></body></html>"
-        }}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.warn('WebView error: ', nativeEvent);
-        }}
-        // onMessage={(event)=>{if(event.nativeEvent.){console.log('hola')}}}
-        onLoad={() => console.log('WebView loaded')}
-        javaScriptEnabled={true}
-        onSourceChanged={()=> console.log('dasds')}
-        onContentProcessDidTerminate={()=>{console.log('sdasds')}}
-        domStorageEnabled={true}
-      />
-      <Button title='dimiss' onPress={()=>setModalVisible(false)}/>
+     {/* <WebView
+              style={styles.webView}
+              originWhitelist={['https://ccapi-stg.paymentez.com']}
+              source={{html: `${challengeHtml}`}}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              onNavigationStateChange={(navState) => {
+                if (navState.url.includes('callback3DS.php')) {
+                  console.log('Éxito 3DS');
+                  setValidate3ds(false);
+                  handleVerifyOtp(); // Verificar OTP si aplica
+                }
+              }}
+              onMessage={(event) => {
+                const data = event.nativeEvent.data;
+                if (data.includes('verify success')) {
+                  console.log('Verificación exitosa');
+                  setValidate3ds(false);
+                  handleVerifyOtp();
+                }
+              }}
+              onError={(syntheticEvent) => {
+                const { nativeEvent } = syntheticEvent;
+                console.warn('WebView error:', nativeEvent);
+                // onError?.({ message: 'Error en desafío 3DS' });
+                setValidate3ds(false);
+              }}
+            /> */}
+      <Button title='dimiss' onPress={()=>setValidate3ds(false)}/>
       </Modal>
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -310,7 +358,7 @@ const PaymentGatewayForm = ({
             maxLength={6}
             setIsFlipped={setIsFlipped}
 
-            validation={(v) => valideOTPCode(v)}
+            validation={(v) => validateOTPCode(v, validOtp)}
             isFlipped={false}
             allowedChars={/^[0-9 ]*$/}
             labelStyle={{ color: theme.labelColor || '#000' }}
@@ -318,6 +366,9 @@ const PaymentGatewayForm = ({
             errorStyle={{ color: theme.errorColor || 'red' }}
           />
         )}
+
+          {!validOtp && <Text style={{color: theme.errorColor || 'red'}}>{t('errors.otpNotValid')}</Text>}
+
 
         {/* Botón */}
         <Pressable
@@ -338,7 +389,7 @@ const PaymentGatewayForm = ({
             {isOtp ? 'Verify Code' : 'Add Card'}
           </Text>
         </Pressable>
-        <Button title='ver modal' onPress={() => setModalVisible(true)} />
+        <Button title='ver modal' onPress={() => setValidate3ds(true)} />
       </ScrollView>
     </KeyboardAvoidingView>
 

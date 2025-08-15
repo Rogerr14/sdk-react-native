@@ -40,9 +40,10 @@ const ListCardPage = () => {
 
   const deleteCard = async (userId: string, tokenCard: string) => {
     await deletCard({ card: { token: tokenCard }, user: { id: userId } });
+    console.log(messageDelete?.message)
     if (messageDelete?.message) {
       Alert.alert('Alert', messageDelete.message.toUpperCase(), [
-        { text: 'OK', onPress: () => getCardsList({ userId: '4' }) },
+        { text: 'OK', onPress: () => {getCardsList({ userId: '4' })} },
       ]);
     }
   };

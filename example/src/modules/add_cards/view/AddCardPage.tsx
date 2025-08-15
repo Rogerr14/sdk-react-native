@@ -6,7 +6,6 @@ import ScreenWrapper from '../../../shared/components/layout/LayoutScreen';
 import { useState } from 'react';
 
 const AddCardPage = () => {
-  const [errorAddCard, setErrorAddCard] = useState<string>('');
   const [loadindAddCard, setLoadindAddCard] = useState(false);
   const navigation = useNavigation();
   return (
@@ -24,10 +23,17 @@ const AddCardPage = () => {
           <PaymentGatewayForm
             showHolderName={true}
             userInfo={{ email: 'test@example.com', id: '4' }}
-            onSuccess={() => {
-              Alert.alert('Alert', 'Card added successfully', [
-                { text: 'OK', onPress: () => navigation.goBack() },
-              ]);
+            onSuccess={(card) => {
+              if(card.card.status === 'rejected'){
+                Alert.alert('Error', `Card ${card.card.status}`, [
+                  { text: 'OK' },
+                ]);
+              }else{
+
+                Alert.alert('Alert', 'Card added successfully', [
+                  { text: 'OK', onPress: () => navigation.goBack() },
+                ]);
+              }
             }}
             onLoading={(value) => {
               setLoadindAddCard(value);

@@ -79,6 +79,7 @@ export interface BillingAddress {
 
 export interface AddCardResponse {
   card: CardResponse;
+  "3ds": The3Ds;
 }
 
 export interface CardResponse {
@@ -93,4 +94,32 @@ export interface CardResponse {
   origin: string;
   bank_name: string;
   message: string;
+}
+
+export interface The3Ds {
+  authentication:   Authentication;
+  browser_response: BrowserResponse;
+  sdk_response:     SDKResponse;
+}
+
+export interface Authentication {
+  status:         string;
+  return_message: string;
+  version:        string;
+  xid:            string;
+  reference_id:   string;
+  cavv:           null;
+  return_code:    string;
+  eci:            string;
+}
+
+export interface BrowserResponse {
+  challenge_request: string;
+  hidden_iframe:     string;
+}
+
+export interface SDKResponse {
+  acs_trans_id:         string;
+  acs_signed_content:   string;
+  acs_reference_number: string;
 }
