@@ -5,7 +5,7 @@
 export interface OtpRequest{
     user: otpUser,
     transaction: otpTransaction
-    type: "BY_OTP"
+    type: "BY_OTP"| "BY_CRES"
     value: string
     more_info: boolean
 }

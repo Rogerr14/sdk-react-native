@@ -1,4 +1,7 @@
+import { Dimensions } from 'react-native';
 import { type CardInfo, cardTypes } from './interfaces';
+import DeviceInfo from 'react-native-device-info';
+import{getLocales} from "react-native-localize";
 
 export const formatExpiry = (value: string) => {
   // Solo mantener dígitos
@@ -64,4 +67,23 @@ export function formatCardNumber(number: string): string {
     }
   }
   return result;
+}
+
+
+
+export async function getBrowserInfo() {
+  const { width, height } = Dimensions.get("window");
+
+  return {
+    ip: await (await fetch("https://api.ipify.org?format=json")).json().then(d => d.ip),
+    language: getLocales()[0]?.languageTag,
+    java_enabled: false,
+    js_enabled: true,
+    color_depth: 24,
+    screen_height: height,
+    screen_width: width,
+    timezone_offset: new Date().getTimezoneOffset() / -60,
+    user_agent: await DeviceInfo.getUserAgent(),
+    accept_header: "text/html"
+  };
 }

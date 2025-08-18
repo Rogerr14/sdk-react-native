@@ -39,7 +39,7 @@ const AddCardPage = () => {
               setLoadindAddCard(value);
             }}
             onError={(error) => {
-              Alert.alert('Error', error.description, [
+              Alert.alert('Error', error.help, [
                 { text: 'OK', },
               ]);
             }}
