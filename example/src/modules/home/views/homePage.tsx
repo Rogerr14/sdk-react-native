@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Image, Pressable, Text, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { homeStyle } from '../styles/homeStyles';
 import ButtonCustom from '../../../shared/components/ButtonComponent/ButtonCustom';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../../routes/navigations';
@@ -11,6 +11,7 @@ import PaymentHook from '../../../../../src/hooks/PaymentHook/PaymentHook';
 import type { CardListItem } from '../../../../../src/hooks';
 import ScreenWrapper from '../../../shared/components/layout/LayoutScreen';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { cardEvents } from '../../../shared/event';
 export interface Product {
   quantity: number;
   description: string;
@@ -95,7 +96,7 @@ export default function HomePage() {
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 20 }}>
-      <ScreenWrapper isLoading={isLoadingPayment} loadingText="Procesando pago...">
+      <ScreenWrapper isLoading={isLoadingPayment} loadingText="Procesing payment...">
         {/* <View style={{padding:30, flex: 1}}> */}
 
         <FlatList
@@ -121,10 +122,21 @@ export default function HomePage() {
         >
           {selectedCard ? (
             <>
-              <Text>Tarjeta seleccionada</Text>
-              <Text>Titular: {selectedCard.holder_name}</Text>
-              <Text>Número: {selectedCard.number}</Text>
-              <Text>Tipo: {selectedCard.type}</Text>
+            <View style={{flexDirection:'row', alignItems:'center', gap:20}}>
+            <Image
+        style={{ width: 40, height: 25, resizeMode: 'contain'}}
+        source={{
+          uri:
+            selectedCard.image ??
+            'https://github.com/paymentez/paymentez-ios/blob/master/PaymentSDK/PaymentAssets.xcassets/stp_card_unknown.imageset/stp_card_unknown@3x.png?raw=true',
+        }}
+      />
+            <View>
+              <Text>Name: {selectedCard.holder_name}</Text>
+              <Text>Number: {selectedCard.number}</Text>
+              <Text>Tye: {selectedCard.type}</Text>
+            </View>
+            </View>
             </>
           ) : (
             <>

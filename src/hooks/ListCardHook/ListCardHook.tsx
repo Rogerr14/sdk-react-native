@@ -2,17 +2,16 @@ import { useCallback, useState } from 'react';
 import type ListCardResponse from './listCard.interface';
 import type ErrorModel from '../../interfaces/error.interface';
 import NuveiSdk from '../../NuveiSdk';
-import { getCardInfo } from '../../components/PaymentGatewayForm/helpers';
+import { getIconCard } from '../../components/PaymentGatewayForm/helpers';
 
-type ListCard = ListCardResponse & {
-  cards: (ListCardResponse['cards'][0] & { icon: string })[];
-};
+
+
 
 const ListCardHook = () => {
-  const [cardsList, setCardsList] = useState<ListCard>({
+  const [cardsList, setCardsList] = useState<ListCardResponse>({
     cards: [],
     result_size: 0,
-  } as ListCard);
+  } as ListCardResponse);
   const [isLoadingList, setIsLoadingList] = useState<boolean>(false);
   const [errorList, setErrorList] = useState<ErrorModel['error'] | null>(null);
 
@@ -50,8 +49,10 @@ const ListCardHook = () => {
       const response = await interceptor.request<ListCardResponse>();
       const listCard = response.cards.map((card) => {
 
-        const { icon } = getCardInfo(card.number);
-        return { ...card, icon };
+        const { icon } = getIconCard(card.type);
+        console.log(icon)
+        card.image = icon;
+        return card;
       });
       const validCards = listCard.filter(
         (card) => card.status === 'valid'

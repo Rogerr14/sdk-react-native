@@ -1,5 +1,5 @@
 
-import { Modal, View, Button, SafeAreaView } from "react-native";
+import { Modal, View, Button } from "react-native";
 import { WebView, type WebViewNavigation } from "react-native-webview";
 
 type ChallengeModalProps = {

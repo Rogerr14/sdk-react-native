@@ -17,7 +17,7 @@ import type {
 } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../../routes/navigations';
 import DeleteCardHook from '../../../../../src/hooks/DeleteCardHook/DeleteCardHook';
-import { useEffect, useState } from 'react';
+import { useEffect, } from 'react';
 import { ListCardHook, type CardListItem } from 'nuvei-sdk';
 import ScreenWrapper from '../../../shared/components/layout/LayoutScreen';
 
@@ -53,7 +53,7 @@ const ListCardPage = () => {
       route.params.onCardSelected(card);
     }
     navigation.goBack();
-  };
+  }
 
   const renderCard = ({ item }: { item: CardListItem }) => (
     <View
@@ -75,6 +75,9 @@ const ListCardPage = () => {
         <Text style={styles.cardText}>Name: {item.holder_name}</Text>
         <Text style={styles.cardText}>
           Card´s number: **** **** **** {item.number.slice(-4)}
+        </Text>
+        <Text style={styles.cardText}>
+          Type: {item.type}
         </Text>
         <Text style={styles.cardText}>
           Expiry date: {item.expiry_month}/{item.expiry_year}

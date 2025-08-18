@@ -12,7 +12,7 @@ const AddCardPage = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <ScreenWrapper
         isLoading={loadindAddCard}
-        loadingText={loadindAddCard ? 'Delete Card...' : 'Reload card...'}
+        loadingText={loadindAddCard ? 'Processing' : ''}
         onRetry={() => {}}
       >
         <KeyboardAvoidingView

@@ -253,6 +253,7 @@ const PaymentGatewayForm = ({
           onChangeText={handleCardNumber}
           maxLength={19}
           editable={!isOtp}
+          keyboardType='numeric'
           allowedChars={/^[0-9 ]*$/}
           setIsFlipped={setIsFlipped}
           isFlipped={false}

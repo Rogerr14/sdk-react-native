@@ -53,6 +53,23 @@ export const getCardInfo = (number: string): CardInfo => {
   };
 };
 
+
+export const getIconCard = (typeCard: string): CardInfo =>{
+  for (const info of cardTypes){
+    if(info.typeCode === typeCard ) return info;
+  }
+  return {
+    type: 'Unknown',
+    regex: /^$/,
+    mask: '#### #### #### ####',
+    validLengths: [16],
+    icon: '',
+    typeCode: '',
+    cvcNumber: 3,
+  };
+}
+
+
 export function formatCardNumber(number: string): string {
   const clean = number.replace(/\D/g, '');
   const { mask } = getCardInfo(clean);
