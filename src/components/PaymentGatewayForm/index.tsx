@@ -117,6 +117,10 @@ const PaymentGatewayForm = ({
           type: cardInfo?.typeCode,
         },
         extra_params:{
+          threeDS2_data: {
+            term_url:'https://lantechco.ec/img/callback3DS.php',
+            device_type:'browser'
+          },
           browser_info: browserInfo
         }
       });
