@@ -18,6 +18,7 @@ import ShadowInput from '../shadowInput';
 import {
   // BrowserInfo,
   type AddCardResponse,
+  type BrowserResponse,
   type UserInfoAdd,
 } from '../../hooks/AddCardHook/addCard.interface';
 import AddCardHook from '../../hooks/AddCardHook/AddCardHook';
@@ -31,7 +32,7 @@ import {
 } from './validations';
 import { t } from '../../i18n';
 import useVerifyOtpHook from '../../hooks/AddCardHook/VerifyOtpHook';
-import type { OtpResponse } from '../../hooks/AddCardHook/otp.interface';
+import type { OtpRequest, OtpResponse } from '../../hooks/AddCardHook/otp.interface';
 import ChallengeModal from '../../hooks/AddCardHook/Verify3dsHook';
 
 export interface PaymentGatewayFormProps {
@@ -59,7 +60,7 @@ const PaymentGatewayForm = ({
   onError,
   onLoading,
   onVerifyOtp,
-  moreInfoOtp = false
+  moreInfoOtp = true
 }: PaymentGatewayFormProps) => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardholderName, setCardholderName] = useState('');
@@ -70,8 +71,9 @@ const PaymentGatewayForm = ({
   const [cardInfo, setCardInfo] = useState<CardInfo>();
   const [isOtp, setIsOtp] = useState<boolean>(false);
   const [validOtp, setValidOtp]  =  useState<boolean>(true);
+  
   const [validate3ds, setValidate3ds] = useState<boolean>(false);
-  // const [challengeHtml, setChallengeHtml] = useState<String>("");
+ const [challengeHtml, setChallengeHtml] = useState<string>("");
 
 
   const { addCardProcess, errorAddCard, addCard } = AddCardHook();
@@ -139,7 +141,10 @@ const PaymentGatewayForm = ({
   }
 
 
-  const handleVerifyOtp = async (type: "BY_OTP"|"BY_CRES", value: string) => {
+
+
+
+  const handleVerifyOtp = async ({type, value}:OtpRequest) => {
 
     // if (!isFormValid) return;
     onLoading?.(true);
@@ -157,8 +162,6 @@ const PaymentGatewayForm = ({
         more_info: moreInfoOtp
       })
 
-
-      setValidate3ds(false);
 
     } finally {
       onLoading?.(false);
@@ -180,8 +183,42 @@ const PaymentGatewayForm = ({
   }, [errorAddCard, errorOtp])
 
 
+  const validateChallengue =  async (browserResponse: BrowserResponse)=>{
+
+    if(browserResponse.challenge_request){
+      setChallengeHtml( `<!DOCTYPE html SYSTEM 'about:legacy-compat'><html class='no-js' lang='en'xmlns='http://www.w3.org/1999/xhtml'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta charset='utf-8'/></head><body OnLoad='OnLoadEvent();'><form action='https://ccapi-stg.paymentez.com/v2/3ds/mockchallenge' method='POST' id='threeD' name='threeD'>message_id: <input type='area' id='message_id' name='message_id' value='AU-106430' />;creq: <input type='area' id='creq'name='creq' value='ewogICAiYWNzVHJhbnNJRCIgOiAiMjZjZGI3ZjAtOTE0My00M2I0LTlhM2YtYWUwZWE1MzUyMzhjIiwKICA' />; \"term_url: <input type='area' id='term_url' name='term_url' value='https://lantechco.ec/img/callback3DS.php' />;\n            <input type='submit' value='proceed to issuer'></form><script language='Javascript'>document.getElementById('threeD').submit(); </script></body></body></html>`)
+      setValidate3ds(true);
+    }else{
+      setTimeout(()=>{}, 5000)
+      await handleVerifyOtp({type:'AUTHENTICATION_CONTINUE', value:""})
+    }
+
+    // if(browserResponse.challenge_request){
+    //   
+    //   setValidate3ds(true)
+    //  await validate3dsChallenge()
+    // }else{
+    //   setTimeout(()=>{}, 3500)
+    //   await handleVerifyOtp({type:'AUTHENTICATION_CONTINUE', value:""})
+    //   if(otpVerify?.['3ds']?.browser_response.challenge_request){
+    //     setChallengeHtml( `<!DOCTYPE html SYSTEM 'about:legacy-compat'><html class='no-js' lang='en'xmlns='http://www.w3.org/1999/xhtml'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta charset='utf-8'/></head><body OnLoad='OnLoadEvent();'><form action='https://ccapi-stg.paymentez.com/v2/3ds/mockchallenge' method='POST' id='threeD' name='threeD'>message_id: <input type='area' id='message_id' name='message_id' value='AU-106430' />;creq: <input type='area' id='creq'name='creq' value='ewogICAiYWNzVHJhbnNJRCIgOiAiMjZjZGI3ZjAtOTE0My00M2I0LTlhM2YtYWUwZWE1MzUyMzhjIiwKICA' />; \"term_url: <input type='area' id='term_url' name='term_url' value='https://lantechco.ec/img/callback3DS.php' />;\n            <input type='submit' value='proceed to issuer'></form><script language='Javascript'>document.getElementById('threeD').submit(); </script></body></body></html>`)
+    //   setValidate3ds(true)
+    //  await validate3dsChallenge()
+    //   }
+    // // }
+  }
+
+  // const validate3dsChallenge = async () =>{
+    
+  //   await handleVerifyOtp({type:"BY_CRES", value:"U3VjY2VzcyBBdXRoZW50aWNhdGlvbg=="})
+  //   setValidate3ds(false);
+  // }
+
   useEffect(() => {
     if (addCard) {
+
+
+      
       switch (addCard.card.status) {
         case 'valid':
           onSuccess?.(addCard)
@@ -190,8 +227,7 @@ const PaymentGatewayForm = ({
           setIsOtp(true)
           break;
         case 'review':
-          setValidate3ds(true)
-          // setChallengeHtml(addCard['3ds'].browser_response.challenge_request)
+          validateChallengue(addCard['3ds'].browser_response)
           break;
         case 'rejected':
           clearAllForms()
@@ -201,17 +237,54 @@ const PaymentGatewayForm = ({
           onSuccess?.(addCard)
           break;
       }
+  
+
     }
   }, [addCard])
 
   useEffect(() => {
     if (otpVerify ) {
-      if(otpVerify.status_detail === 33){
-        setOtpCode("")
-        setValidOtp(false)
-      }else{
-        onVerifyOtp?.(otpVerify)
+      if(isOtp){
+      switch (otpVerify.transaction?.status_detail) {
+        case 31:
+          setOtpCode("")
+          setValidOtp(false)
+          break;
+        case 32:
+          setValidOtp(true)
+          onVerifyOtp?.(otpVerify)
+          break;
+        case 33:
+          clearAllForms()
+          onError?.({
+            type:'Otp not valid',
+            help:'try again',
+            description:''
+          })
+          break;
+        default:
+          break;
       }
+    }else{
+
+      switch(otpVerify.transaction?.status){
+        case 'success':
+          onVerifyOtp?.(otpVerify)
+          break;
+        case 'pending':
+          validateChallengue(otpVerify['3ds']!.browser_response)
+          break;
+        case 'failure':
+          onVerifyOtp?.(otpVerify)
+          break;
+        default:
+
+        onVerifyOtp?.(otpVerify)
+          break;
+      }
+
+    }
+    
     }
   }, [otpVerify])
 
@@ -224,8 +297,11 @@ const PaymentGatewayForm = ({
       
       <ChallengeModal
         visible={validate3ds}
-        onClose={()=>{ handleVerifyOtp("BY_CRES", "U3VjY2VzcyBBdXRoZW50aWNhdGlvbg==") } }
+        onClose={()=>{ 
+          handleVerifyOtp({type:"BY_CRES", value: 'U3VjY2VzcyBBdXRoZW50aWNhdGlvbg=='})
+         } }
         onSuccess={()=>{}}
+        challengeHtml={challengeHtml}
       />
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -344,10 +420,11 @@ const PaymentGatewayForm = ({
         <Pressable
           style={[
             styles.button,
+            
             { backgroundColor: theme.buttonColor || '#000' },
             !isFormValid && styles.disabledButton,
           ]}
-          onPress={isOtp ? ()=> handleVerifyOtp("BY_OTP", otpCode) : handleAddCardPress}
+          onPress={isOtp ? ()=> handleVerifyOtp({type:"BY_OTP", value: otpCode}) : handleAddCardPress}
           disabled={!isFormValid}
         >
           <Text
@@ -359,7 +436,7 @@ const PaymentGatewayForm = ({
             {isOtp ? 'Verify Code' : 'Add Card'}
           </Text>
         </Pressable>
-        <Button title='ver modal' onPress={() => setValidate3ds(true)} />
+        <Button  title='Show Modal' onPress={() => setValidate3ds(true)} />
       </ScrollView>
     </KeyboardAvoidingView>
 

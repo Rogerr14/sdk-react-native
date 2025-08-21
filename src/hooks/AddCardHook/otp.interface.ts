@@ -3,11 +3,11 @@
 
 
 export interface OtpRequest{
-    user: otpUser,
-    transaction: otpTransaction
-    type: "BY_OTP"| "BY_CRES"
-    value: string
-    more_info: boolean
+    user?: otpUser,
+    transaction?: otpTransaction
+    type?: "BY_OTP"| "BY_CRES" |"AUTHENTICATION_CONTINUE" |"BY_AMOUNT"| "BY_AUTH_CODE"
+    value?: string
+    more_info?: boolean
 }
 
 export interface otpUser{
