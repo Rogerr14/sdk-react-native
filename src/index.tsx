@@ -1,11 +1,12 @@
-import NuveiSdk from './NativeNuveiSdk';
-export * from './hooks';
+export { default as NuveiSdk } from './NuveiSdk';
+export * from './services';
+export * from './interfaces';
 export * from './i18n';
 export * from './components';
 
-export function multiply(a: number, b: number): number {
-  return NuveiSdk.multiply(a, b);
-}
+// export function multiply(a: number, b: number): number {
+//   return NuveiSdk.multiply(a, b);
+// }
 export { HelloFromSDK };
 
 import { Text, View, StyleSheet } from 'react-native';

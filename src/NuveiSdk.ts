@@ -1,6 +1,7 @@
 import Environment from './environment/environment';
 import InterceptorHttp from './http/interceptor';
-import type ErrorModel from './interfaces/error.interface';
+import type { ErrorModel } from './interfaces';
+
 
 
 

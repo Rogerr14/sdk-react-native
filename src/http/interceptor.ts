@@ -1,7 +1,7 @@
 import { AxiosAdapter } from './adapters/axios.adapter';
 import Environment from '../environment/environment';
 import generateAuthToken from '../utils/NuveiUtils';
-import type ErrorModel from '../interfaces/error.interface';
+import type { ErrorModel } from '../interfaces';
 
 export interface interceptorHttp {
   endpoint: string;
@@ -78,7 +78,7 @@ export default class InterceptorHttp {
           });
       }
     } catch (error: any) {
-      throw error;
+      throw error as ErrorModel;
     }
   }
 }

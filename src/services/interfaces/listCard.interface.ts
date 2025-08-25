@@ -11,7 +11,7 @@ export interface CardListItem {
   image?: string;
 }
 
-export default interface ListCardResponse {
+export  interface ListCardResponse {
   cards: CardListItem[];
   result_size: number;
 }

@@ -6222,6 +6222,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"events@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "events@npm:3.3.0"
+  checksum: f6f487ad2198aa41d878fa31452f1a3c00958f46e9019286ff4787c84aac329332ab45c9cdc8c445928fc6d7ded294b9e005a7fce9426488518017831b272780
+  languageName: node
+  linkType: hard
+
 "execa@npm:8.0.0":
   version: 8.0.0
   resolution: "execa@npm:8.0.0"
@@ -7360,7 +7367,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"invariant@npm:^2.2.4":
+"invariant@npm:2.2.4, invariant@npm:^2.2.4":
   version: 2.2.4
   resolution: "invariant@npm:2.2.4"
   dependencies:
@@ -9737,15 +9744,19 @@ __metadata:
     "@react-navigation/stack": ^7.4.5
     "@types/react": ^19.0.0
     "@types/react-native-get-random-values": ^1.8.2
+    events: ^3.3.0
     react: 19.0.0
     react-native: 0.79.2
     react-native-builder-bob: ^0.40.13
+    react-native-device-info: ^14.0.4
     react-native-gesture-handler: ^2.27.2
     react-native-get-random-values: ^1.11.0
     react-native-linear-gradient: ^2.8.3
+    react-native-localize: ^3.5.1
     react-native-monorepo-config: ^0.1.9
     react-native-safe-area-context: ^5.5.2
     react-native-screens: ^4.13.1
+    react-native-webview: ^13.15.0
   languageName: unknown
   linkType: soft
 
@@ -9777,8 +9788,11 @@ __metadata:
     react: 19.0.0
     react-native: 0.79.2
     react-native-builder-bob: ^0.40.13
+    react-native-device-info: ^14.0.4
     react-native-flip-card: ^3.5.7
     react-native-linear-gradient: ^2.8.3
+    react-native-localize: ^3.5.1
+    react-native-webview: ^13.15.0
     release-it: ^17.10.0
     turbo: ^1.10.7
     typescript: ^5.8.3
@@ -10665,6 +10679,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-device-info@npm:^14.0.4":
+  version: 14.0.4
+  resolution: "react-native-device-info@npm:14.0.4"
+  peerDependencies:
+    react-native: "*"
+  checksum: aa839dbe7df1246a4b5f9bcfeb3d4cc4be585f13a0d3ff6a03f57a0c2cfe7590291ac292dda4c51fd8765f94c870857676463e8e2f1660b057f3ae2b4335db29
+  languageName: node
+  linkType: hard
+
 "react-native-flip-card@npm:^3.5.7":
   version: 3.5.7
   resolution: "react-native-flip-card@npm:3.5.7"
@@ -10720,6 +10743,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-localize@npm:^3.5.1":
+  version: 3.5.1
+  resolution: "react-native-localize@npm:3.5.1"
+  peerDependencies:
+    "@expo/config-plugins": ^9.0.0 || ^10.0.0
+    react: "*"
+    react-native: "*"
+    react-native-macos: "*"
+  peerDependenciesMeta:
+    "@expo/config-plugins":
+      optional: true
+    react-native-macos:
+      optional: true
+  checksum: 0286e825cb879d06271028a8ff26cc77211ed194cf3c9075734605c2d16899c3185b4a3185a8ad5ee579538542c2cc07036d90a734a322f4053beece53118f4c
+  languageName: node
+  linkType: hard
+
 "react-native-monorepo-config@npm:^0.1.8, react-native-monorepo-config@npm:^0.1.9":
   version: 0.1.9
   resolution: "react-native-monorepo-config@npm:0.1.9"
@@ -10751,6 +10791,19 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 1beafec354c3a6bccfde1f9058961d5c9218492f1c68cf5b2bd454d157d4cf1e9047992570927dbcd97893e1e1c990563e4d034fe0d8700479ce2d37e037fe58
+  languageName: node
+  linkType: hard
+
+"react-native-webview@npm:^13.15.0":
+  version: 13.15.0
+  resolution: "react-native-webview@npm:13.15.0"
+  dependencies:
+    escape-string-regexp: ^4.0.0
+    invariant: 2.2.4
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 1c843206108358faef5cd8e25834de729a90319c3fa3f765923536fdd99b86b07a3e850b89ebe6503725a022dd9dddd5de76ef6e102d290cc5935dcf9c60198d
   languageName: node
   linkType: hard
 

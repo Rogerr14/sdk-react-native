@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { HttpAdapter } from './http.adapter';
-import type ErrorModel from '../../interfaces/error.interface';
+import type { ErrorModel } from '../../interfaces';
 
 interface Options {
   baseUrl: string;

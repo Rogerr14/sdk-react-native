@@ -1,4 +1,7 @@
+import { Dimensions } from 'react-native';
 import { type CardInfo, cardTypes } from './interfaces';
+import DeviceInfo from 'react-native-device-info';
+import{getLocales} from "react-native-localize";
 
 export const formatExpiry = (value: string) => {
   // Solo mantener dígitos
@@ -50,6 +53,23 @@ export const getCardInfo = (number: string): CardInfo => {
   };
 };
 
+
+export const getIconCard = (typeCard: string): CardInfo =>{
+  for (const info of cardTypes){
+    if(info.typeCode === typeCard ) return info;
+  }
+  return {
+    type: 'Unknown',
+    regex: /^$/,
+    mask: '#### #### #### ####',
+    validLengths: [16],
+    icon: '',
+    typeCode: '',
+    cvcNumber: 3,
+  };
+}
+
+
 export function formatCardNumber(number: string): string {
   const clean = number.replace(/\D/g, '');
   const { mask } = getCardInfo(clean);
@@ -64,4 +84,23 @@ export function formatCardNumber(number: string): string {
     }
   }
   return result;
+}
+
+
+
+export async function getBrowserInfo() {
+  const { width, height } = Dimensions.get("window");
+
+  return {
+    ip: await (await fetch("https://api.ipify.org?format=json")).json().then(d => d.ip),
+    language: getLocales()[0]?.languageTag,
+    java_enabled: false,
+    js_enabled: true,
+    color_depth: 24,
+    screen_height: height,
+    screen_width: width,
+    timezone_offset: new Date().getTimezoneOffset() / -60,
+    user_agent: await DeviceInfo.getUserAgent(),
+    accept_header: "text/html"
+  };
 }

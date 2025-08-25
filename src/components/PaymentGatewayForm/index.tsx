@@ -1,33 +1,20 @@
-import { useEffect, useState } from 'react';
-import {
-  View,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  StyleSheet,
-} from 'react-native';
+import {  useState } from 'react';
+import { View, ScrollView, KeyboardAvoidingView, Platform, Pressable, Text, StyleSheet, Button, Dimensions } from 'react-native';
 import type { CardInfo } from './interfaces';
-import { formatCardNumber, formatExpiry, getCardInfo } from './helpers';
+import { formatCardNumber, formatExpiry, getCardInfo, getBrowserInfo } from './helpers';
 import AnimatedCardFlip from '../FlipCard';
 import ShadowInput from '../shadowInput';
-import type {
-  AddCardResponse,
-  UserInfoAdd,
-} from '../../hooks/AddCardHook/addCard.interface';
-import AddCardHook from '../../hooks/AddCardHook/AddCardHook';
-import type ErrorModel from '../../interfaces/error.interface';
-import {
-  validateCardNumber,
-  validateHolderName,
-  validateExpiryDate,
-  validateSecurityCode,
-  valideOTPCode,
-} from './validations';
+import { type AddCardResponse, type UserInfoAdd } from '../../services/interfaces/addCard.interface';
+
+import { validateCardNumber, validateHolderName, validateExpiryDate, validateSecurityCode, validateOTPCode } from './validations';
 import { t } from '../../i18n';
-import useVerifyOtpHook from '../../hooks/AddCardHook/VerifyOtpHook';
-import type { OtpResponse } from '../../hooks/AddCardHook/otp.interface';
+import type {  OtpResponse } from '../../services/interfaces/otp.interface';
+import ChallengeModal from '../../hooks/AddCardHook/Verify3dsHook';
+
+import type { ErrorModel } from '../../interfaces';
+import { addCard } from '../../services/cards/Add.card';
+import { verify } from '../../services/transactions/verify.transaction';
+import type { BrowserResponse } from '../../services/interfaces/generic.interface';
 
 export interface PaymentGatewayFormProps {
   userInfo: UserInfoAdd;
@@ -40,8 +27,8 @@ export interface PaymentGatewayFormProps {
     errorColor?: string;
   };
   onSuccess?: (response: AddCardResponse) => void;
-  onVerifyOtp?: (response: OtpResponse)=>void; 
-  onError?: (response: ErrorModel['error']) => void;
+  onVerifyOtp?: (response: OtpResponse) => void;
+  onError?: (response: ErrorModel) => void;
   onLoading?: (isLoading: boolean) => void;
   moreInfoOtp?: boolean
 }
@@ -54,24 +41,43 @@ const PaymentGatewayForm = ({
   onError,
   onLoading,
   onVerifyOtp,
-  moreInfoOtp = false
+  moreInfoOtp = true
 }: PaymentGatewayFormProps) => {
+
+  //FORM INPUTS INFORMATION
   const [cardNumber, setCardNumber] = useState('');
   const [cardholderName, setCardholderName] = useState('');
   const [dateExpiry, setDateExpiry] = useState('');
   const [securityCode, setSecurityCode] = useState('');
   const [otpCode, setOtpCode] = useState("");
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [cardInfo, setCardInfo] = useState<CardInfo>();
-  const [isOtp, setIsOtp] = useState<boolean>(false);
 
-  const { addCardProcess, errorAddCard, addCard } = AddCardHook();
-  const {verifyByOtp, errorOtp, otpVerify} = useVerifyOtpHook();
+  //ANIMATIONS FLIP CARD
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  //PROCESS INFOMATION
+  const [cardInfo, setCardInfo] = useState<CardInfo>();
+  const [challengeHtml, setChallengeHtml] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  //VALIDATIONS:
+  const [verifyByOtp, setVerifyByOtp] = useState<boolean>(false);
+  const [isOtpValid, setIsOtpValid] = useState<boolean>(true);
+  const [validateBy3ds, setValidateBy3ds] = useState<boolean>(false);
+  // const [validOtp, setValidOtp] = useState<boolean>(true);
+  // const [validate3ds, setValidate3ds] = useState<boolean>(false);
+
+  //information
+  const [cardAdded, setCardAdded] =  useState<AddCardResponse>();
+
+
+  //CUSTOM HOOKS
   const handleCardNumber = (value: string) => {
     const result = formatCardNumber(value);
     setCardNumber(result);
     setCardInfo(getCardInfo(result));
   };
+
+
 
   const handleExpiryChange = (value: string) =>
     setDateExpiry(formatExpiry(value));
@@ -81,18 +87,20 @@ const PaymentGatewayForm = ({
     !validateHolderName(cardholderName, showHolderName) &&
     !validateExpiryDate(dateExpiry) &&
     !validateSecurityCode(securityCode, cardInfo?.cvcNumber) &&
-    !(isOtp && valideOTPCode(otpCode));
+    !(verifyByOtp && validateOTPCode(otpCode));
 
   const handleAddCardPress = async () => {
     if (!isFormValid) return;
     onLoading?.(true);
+    setIsLoading(true)
 
     try {
       const [monthStr, yearStr] = dateExpiry.split('/');
       const month = parseInt(monthStr!, 10);
       const year = 2000 + parseInt(yearStr!, 10);
 
-      await addCardProcess({
+      const browserInfo = await getBrowserInfo()
+      const response = await addCard({
         user: userInfo,
         card: {
           number: cardNumber.replace(/\s/g, ''),
@@ -102,75 +110,221 @@ const PaymentGatewayForm = ({
           cvc: securityCode,
           type: cardInfo?.typeCode,
         },
+        extra_params: {
+          threeDS2_data: {
+            term_url: 'https://lantechco.ec/img/callback3DS.php',
+            device_type: 'browser'
+          },
+          browser_info: browserInfo
+        }
       });
-
+      console.log(response)
+      setCardAdded(response);
+      switch (response?.card.status) {
+              case 'valid':
+                onLoading?.(false);
+                setIsLoading(false)
+                onSuccess?.(response)
+                clearAllForms()
+                
+                break;
+              case 'pending':
+                setVerifyByOtp(true);
+                onLoading?.(false);
+                setIsLoading(false)
+                break;
+              case 'review':
+                verifyBy3dsProcess(response['3ds'].browser_response)
+                break;
+              case 'rejected':
+                clearAllForms()
+                onLoading?.(false);
+                setIsLoading(false)
+                onSuccess?.(response)
+                break;
+              default:
+                onError?.({error: {
+                  type:'Error in request',
+                  help:'',
+                  description:'Error in request'
+                }})
+                onLoading?.(false);
+                setIsLoading(false)
+                break;
+            }
+     
+            
       
-      // if (errorAddCard) onError?.(errorAddCard);
-      // else onSuccess?.(addCard!);
-    } finally {
+    } catch (err: any) {
       onLoading?.(false);
+      clearAllForms()
+      setIsLoading(false)
+      console.log(err)
+      onError?.(err['error'])
     }
   };
 
-
-  const handleVerifyOtp = async()=>{
-    if(!isFormValid) return;
-    onLoading?.(true);
-
-    try {
-      await verifyByOtp({user:{
-       id: userInfo.id 
-      }, transaction:{
-        id:addCard?.card.transaction_reference ?? ''
-      },
-      value: otpCode,
-      type:'BY_OTP',
-      more_info: moreInfoOtp
-    })
-      
-    } finally{
-      onLoading?.(false);
-    }
+  const clearAllForms = () => {
+    setCardNumber("")
+    setCardholderName("")
+    setDateExpiry("")
+    setSecurityCode("")
+    setOtpCode("")
+    setIsOtpValid(true)
+    setVerifyByOtp(false)
+    setCardInfo(undefined)
   }
 
 
-  useEffect(() => {
-    if(errorAddCard){
-      onError?.(errorAddCard)
-    }
-    if(errorOtp){
-      onError?.(errorOtp)
-    }
-  }, [errorAddCard, errorOtp])
   
 
-  useEffect(()=>{
-    if(addCard){
-      switch (addCard.card.status) {
-        case 'valid':
-          onSuccess?.(addCard)
-          break;
-        case 'pending':
-          setIsOtp(true)
-          break;
-        default:
-          onSuccess?.(addCard)
-          break;
-      }
-    }
-  },[addCard])
+  const verifyBy3dsProcess = async (browserResponse: BrowserResponse)=>{
+      if(browserResponse.challenge_request){
+        setIsLoading(false);
+        onLoading?.(false);
+        setChallengeHtml(`<!DOCTYPE html SYSTEM 'about:legacy-compat'><html class='no-js' lang='en'xmlns='http://www.w3.org/1999/xhtml'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta charset='utf-8'/></head><body OnLoad='OnLoadEvent();'><form action='https://ccapi-stg.paymentez.com/v2/3ds/mockchallenge' method='POST' id='threeD' name='threeD'>message_id: <input type='area' id='message_id' name='message_id' value='AU-106430' />;creq: <input type='area' id='creq'name='creq' value='ewogICAiYWNzVHJhbnNJRCIgOiAiMjZjZGI3ZjAtOTE0My00M2I0LTlhM2YtYWUwZWE1MzUyMzhjIiwKICA' />; \"term_url: <input type='area' id='term_url' name='term_url' value='https://lantechco.ec/img/callback3DS.php' />;\n            <input type='submit' value='proceed to issuer'></form><script language='Javascript'>document.getElementById('threeD').submit(); </script></body></body></html>`)
+        setValidateBy3ds(true);
+      }else{
+        try {
+          setTimeout(() => { }, 5000)
+          const response = await verify({
+            user: {
+              id: userInfo.id
+            }, transaction: {
+              id: cardAdded?.card.transaction_reference ?? ''
+            },
+            value: '',
+            type: 'AUTHENTICATION_CONTINUE',
+            more_info: moreInfoOtp
+          })
 
-  useEffect(()=>{
-    if(otpVerify){
-      onVerifyOtp?.(otpVerify)
+          switch (response.transaction?.status) {
+                    case 'success':
+                      onVerifyOtp?.(response)
+                      setIsLoading(false);
+                      onLoading?.(false);
+                      break;
+                    case 'pending':
+                      verifyBy3dsProcess(response['3ds']!.browser_response)
+                      break;
+                    case 'failure':
+                      onVerifyOtp?.(response)
+                      setIsLoading(false);
+                      onLoading?.(false);
+                      break;
+                    default:
+                    onError?.({error:{
+                      type:'Error in request',
+                      help:'',
+                      description:'Error in request'
+                    }})
+                    onLoading?.(false);
+                    setIsLoading(false)
+                    break;
+                  }
+        } catch (err: any) {
+          onLoading?.(false);
+          setIsLoading(false)
+          onError?.(err['error'])
+        }
+        
+
+
+      }
+  }
+
+
+
+  const handleVerifyOtp = async () =>{
+      try {
+        setIsLoading(true)
+        onLoading?.(true);
+        const response = await verify({
+                user: {
+                  id: userInfo.id
+                }, transaction: {
+                  id: cardAdded?.card.transaction_reference ?? ''
+                },
+                value: otpCode,
+                type: 'BY_OTP',
+                more_info: moreInfoOtp
+              });
+              switch (response.transaction?.status_detail) {
+                        case 31:
+                          setOtpCode("")
+                          setIsOtpValid(false)
+                          break;
+                        case 32:
+                          setIsOtpValid(true)
+                          onVerifyOtp?.(response)
+                          break;
+                        case 33:
+                          clearAllForms()
+                          onVerifyOtp?.(response)
+                          break;
+                        default:
+                          setOtpCode("")
+                          setIsOtpValid(false)
+                          break;
+                      }
+      } catch (err:any) {
+        onError?.(err)
+      }finally{
+        setIsLoading(false);
+        onLoading?.(false);
+      }
+  }
+
+
+  const  challengeValidationCress = async(crestValue: string )=>{
+    try {
+      setValidateBy3ds(false)
+      setIsLoading(true)
+      onLoading?.(true);
+      const response = await verify({
+        user: {
+          id: userInfo.id
+        }, transaction: {
+          id: cardAdded?.card.transaction_reference ?? ''
+        },
+        value: crestValue,
+        type: 'BY_CRES',
+        more_info: moreInfoOtp
+      });
+      onVerifyOtp?.(response)
+      setIsLoading(false)
+      onLoading?.(false);
+    } catch (err:any) {
+      onLoading?.(false);
+      setIsLoading(false)
+      onError?.(err)
     }
-  },[otpVerify])
+
+  }
+
+  const handlePressButton = ()=>{
+    if(verifyByOtp){
+       handleVerifyOtp()
+    }else{
+      handleAddCardPress()
+    }
+  }
 
   return (
+
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
+
+      <ChallengeModal
+        visible={validateBy3ds}
+        onClose={() => {
+          challengeValidationCress('U3VjY2VzcyBBdXRoZW50aWNhdGlvbg==')
+        }}
+        onSuccess={() => { }}
+        challengeHtml={challengeHtml}
+      />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16 }}
@@ -196,7 +350,8 @@ const PaymentGatewayForm = ({
           value={cardNumber}
           onChangeText={handleCardNumber}
           maxLength={19}
-          editable={!isOtp}
+          editable={!verifyByOtp}
+          keyboardType='numeric'
           allowedChars={/^[0-9 ]*$/}
           setIsFlipped={setIsFlipped}
           isFlipped={false}
@@ -212,7 +367,7 @@ const PaymentGatewayForm = ({
             placeholder="John Doe"
             forceUppercase={true}
             value={cardholderName}
-            editable={!isOtp}
+            editable={!verifyByOtp}
             onChangeText={setCardholderName}
             maxLength={20}
             validation={(v) => validateHolderName(v, showHolderName)}
@@ -232,11 +387,11 @@ const PaymentGatewayForm = ({
               label={t('forms.expiryDate')}
               placeholder="MM/YY"
               value={dateExpiry}
-              editable={!isOtp}
+              editable={!verifyByOtp}
               onChangeText={handleExpiryChange}
               maxLength={5}
               keyboardType="numeric"
-              validation={(v)=>validateExpiryDate(v)}
+              validation={(v) => validateExpiryDate(v)}
               setIsFlipped={setIsFlipped}
               isFlipped={false}
               labelStyle={{ color: theme.labelColor || '#000' }}
@@ -249,7 +404,7 @@ const PaymentGatewayForm = ({
               label={t('forms.securityCode')}
               placeholder="CCV/CVV"
               value={securityCode}
-              editable={!isOtp}
+              editable={!verifyByOtp}
               onChangeText={setSecurityCode}
               maxLength={cardInfo?.cvcNumber || 3}
               keyboardType="numeric"
@@ -262,7 +417,7 @@ const PaymentGatewayForm = ({
             />
           </View>
         </View>
-        {isOtp && (
+        {verifyByOtp && (
           <ShadowInput
             label={t('forms.otpCode')}
             placeholder="123456"
@@ -270,8 +425,8 @@ const PaymentGatewayForm = ({
             onChangeText={setOtpCode}
             maxLength={6}
             setIsFlipped={setIsFlipped}
-            
-            validation={(v)=>valideOTPCode(v)}
+
+            validation={(v) => validateOTPCode(v, isOtpValid)}
             isFlipped={false}
             allowedChars={/^[0-9 ]*$/}
             labelStyle={{ color: theme.labelColor || '#000' }}
@@ -280,15 +435,20 @@ const PaymentGatewayForm = ({
           />
         )}
 
+        {!isOtpValid && <Text style={{ color: theme.errorColor || 'red' }}>{t('errors.otpNotValid')}</Text>}
+
+
         {/* Botón */}
         <Pressable
           style={[
             styles.button,
+
             { backgroundColor: theme.buttonColor || '#000' },
-            !isFormValid && styles.disabledButton,
+            (!isFormValid  && styles.disabledButton) || (isLoading && styles.disabledButton) ,
           ]}
-          onPress={isOtp ? handleVerifyOtp :handleAddCardPress}
-          disabled={!isFormValid}
+          onPress={handlePressButton}
+          // onPress={()=>{handleAddCardPress()}}
+          disabled={!isFormValid || isLoading}
         >
           <Text
             style={{
@@ -296,11 +456,16 @@ const PaymentGatewayForm = ({
               textAlign: 'center',
             }}
           >
-            {isOtp ? 'Verify Code' :'Add Card'}
+            {verifyByOtp ? 'Verify Code' : 'Add Card'}
           </Text>
         </Pressable>
+        <Button title='Show Modal' onPress={() => {
+          setChallengeHtml(`<!DOCTYPE html SYSTEM 'about:legacy-compat'><html class='no-js' lang='en'xmlns='http://www.w3.org/1999/xhtml'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta charset='utf-8'/></head><body OnLoad='OnLoadEvent();'><form action='https://ccapi-stg.paymentez.com/v2/3ds/mockchallenge' method='POST' id='threeD' name='threeD'>message_id: <input type='area' id='message_id' name='message_id' value='AU-106430' />;creq: <input type='area' id='creq'name='creq' value='ewogICAiYWNzVHJhbnNJRCIgOiAiMjZjZGI3ZjAtOTE0My00M2I0LTlhM2YtYWUwZWE1MzUyMzhjIiwKICA' />; \"term_url: <input type='area' id='term_url' name='term_url' value='https://lantechco.ec/img/callback3DS.php' />;\n            <input type='submit' value='proceed to issuer'></form><script language='Javascript'>document.getElementById('threeD').submit(); </script></body></body></html>`)
+          setValidateBy3ds(true);
+        }} />
       </ScrollView>
     </KeyboardAvoidingView>
+
   );
 };
 
@@ -308,6 +473,48 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', marginTop: 8 },
   button: { marginTop: 16, paddingVertical: 12, borderRadius: 8 },
   disabledButton: { backgroundColor: '#888' },
+  modalView: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 40,
+    width: Dimensions.get('window').width * 0.9, // 90% del ancho de la pantalla
+    height: Dimensions.get('window').height * 0.7, // 70% del alto de la pantalla
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  webView: {
+    justifyContent: 'center',
+    // flex:1,
+    marginTop: 60,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center', // Centra verticalmente
+    alignItems: 'center', // Centra horizontalmente
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semitransparente
+  },
+  buttonClose: {
+    backgroundColor: '#2196F3',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
 });
 
 export default PaymentGatewayForm;
