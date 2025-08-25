@@ -28,7 +28,7 @@ const AddCardPage = () => {
                 Alert.alert('Error', `Card ${card.card.status}`, [
                   { text: 'OK' },
                 ]);
-              }else{
+              }else if(card.card.status === 'valid'){
 
                 Alert.alert('Alert', 'Card added successfully', [
                   { text: 'OK', onPress: () => navigation.goBack() },
@@ -39,14 +39,21 @@ const AddCardPage = () => {
               setLoadindAddCard(value);
             }}
             onError={(error) => {
-              Alert.alert('Error', error.help, [
+              Alert.alert('Error', error.error.help , [
                 { text: 'OK', },
               ]);
             }}
-            onVerifyOtp={() => {
-              Alert.alert('Alert', 'Card added successfully', [
-                { text: 'OK', onPress: () => navigation.goBack() },
-              ]);
+            onVerifyOtp={(verify) => {
+              if(verify.transaction?.status === 'failure'){
+                Alert.alert('Alert', verify.transaction.current_status?? '', [
+                  { text: 'OK' },
+                ]);
+              }else{
+                Alert.alert('Alert', 'Card added successfully', [
+                  { text: 'OK', onPress: () => navigation.goBack() },
+                ]);
+
+              }
             }}
           />
         </KeyboardAvoidingView>

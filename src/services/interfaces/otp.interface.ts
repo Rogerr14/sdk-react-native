@@ -1,4 +1,6 @@
 
+import type { ThreeDsResponse } from "./generic.interface"
+
 
 
 
@@ -28,38 +30,14 @@ export interface OtpResponse {
     message?:        string;
     transaction?: TransactionOtpResponse;
     card?:        CardOtpResponse;
-    "3ds"?:       The3DsOtpResposne;
+    "3ds"?:       ThreeDsResponse;
 }
 
 
 
-export interface The3DsOtpResposne {
-    sdk_response:     SDKResponseOtpResponse;
-    authentication:   AuthenticationOtpResponse;
-    browser_response: BrowserResponse;
-}
 
-export interface AuthenticationOtpResponse {
-    status:         string;
-    return_message: string;
-    version:        null;
-    xid:            string;
-    reference_id:   string;
-    cavv:           null;
-    return_code:    string;
-    eci:            null;
-}
 
-export interface BrowserResponse {
-    hidden_iframe:     string;
-    challenge_request: string;
-}
 
-export interface SDKResponseOtpResponse {
-    acs_trans_id:         string;
-    acs_signed_content:   null;
-    acs_reference_number: string;
-}
 
 export interface CardOtpResponse {
     bin:                   string;
@@ -74,14 +52,19 @@ export interface CardOtpResponse {
 }
 
 export interface TransactionOtpResponse {
-    status:             string;
-    payment_date:       null;
     amount:             number;
     authorization_code: null;
-    installments:       number;
-    dev_reference:      string;
-    message:            null;
+    carrier:            string;
     carrier_code:       null;
+    current_status:     null;
+    dev_reference:      string;
     id:                 string;
+    installments:       number;
+    installments_type:  string;
+    message:            null;
+    payment_date:       null;
+    payment_method_type: string;
+    product_description: string;
+    status:             string;
     status_detail:      number;
 }

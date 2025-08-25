@@ -1,4 +1,6 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
+
+import { listCards, type CardListItem, type ListCardResponse, type DeleteCardResponse, deleteCard, type ErrorModel } from 'nuvei-sdk';
 import {
   Alert,
   FlatList,
@@ -16,10 +18,9 @@ import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../../routes/navigations';
-import DeleteCardHook from '../../../../../src/hooks/DeleteCardHook/DeleteCardHook';
-import { useEffect, } from 'react';
-import { ListCardHook, type CardListItem } from 'nuvei-sdk';
+import { useEffect, useState, } from 'react';
 import ScreenWrapper from '../../../shared/components/layout/LayoutScreen';
+
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RouteProp = NativeStackScreenProps<
@@ -28,24 +29,52 @@ type RouteProp = NativeStackScreenProps<
 >['route'];
 
 const ListCardPage = () => {
-  const { cardsList, isLoadingList, errorList, getCardsList } = ListCardHook();
-  const { messageDelete, isLoadingDelete, errorDelete, deletCard } =
-    DeleteCardHook();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [listCard, setListCard] = useState<ListCardResponse>();
+  // const [deleteCardMessage, setDeleteCardMessage] =  useState<DeleteCardResponse>();
+  const [error, setError] = useState<ErrorModel | null>(null);
+  // const { cardsList, isLoadingList, errorList, getCardsList } = ListCardHook();
+
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProp>();
 
-  useEffect(() => {
-    getCardsList({ userId: '4' });
-  }, [getCardsList]);
+  useEffect(()=>{
+    fetchCardsExample();
+  },[])
 
-  const deleteCard = async (userId: string, tokenCard: string) => {
-    await deletCard({ card: { token: tokenCard }, user: { id: userId } });
-    console.log(messageDelete?.message)
-    if (messageDelete?.message) {
-      Alert.alert('Alert', messageDelete.message.toUpperCase(), [
-        { text: 'OK', onPress: () => {getCardsList({ userId: '4' })} },
+  async function fetchCardsExample() {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const res = await listCards('4');
+      setListCard(res)// solo tarjetas válidas
+    } catch (err:any) {
+      console.error('error', err);
+      setError(err)
+    }finally{
+      setIsLoading(false)
+    }
+  }
+
+  const deleteCardFunction = async (userId: string, tokenCard: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await deleteCard({card:{token: tokenCard}, user:{id:userId}});
+      // setDeleteCardMessage(response)
+      if (response?.message) {
+      Alert.alert('Alert', response.message.toUpperCase(), [
+        { text: 'OK', onPress: () => {fetchCardsExample()} },
       ]);
     }
+    } catch (err: any) {
+      console.error('error', err);
+      setError(err)
+    }finally{
+      setIsLoading(false)
+    }
+    // console.log(messageDelete?.message)
+    
   };
 
   const selectCard = (card: CardListItem) => {
@@ -54,6 +83,9 @@ const ListCardPage = () => {
     }
     navigation.goBack();
   }
+
+
+
 
   const renderCard = ({ item }: { item: CardListItem }) => (
     <View
@@ -83,7 +115,7 @@ const ListCardPage = () => {
           Expiry date: {item.expiry_month}/{item.expiry_year}
         </Text>
       </Pressable>
-      <Pressable onPress={() => deleteCard('4', item.token)}>
+      <Pressable onPress={() => deleteCardFunction('4', item.token)}>
         <Text style={styles.deleteText}>X</Text>
       </Pressable>
     </View>
@@ -92,19 +124,19 @@ const ListCardPage = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScreenWrapper
-        isLoading={isLoadingList || isLoadingDelete}
-        loadingText={isLoadingDelete ? 'Delete Card...' : 'Reload card...'}
-        errorMessage={errorList?.description || errorDelete?.description}
-        onRetry={() => getCardsList({ userId: '4' })}
+        isLoading={isLoading }
+        loadingText={'Loading....'}
+        errorMessage={error?.error.description }
+        onRetry={() => fetchCardsExample()}
       >
         <View style={styles.innerContainer}>
           <Text style={styles.title}>Card´s List</Text>
           <ButtonCustom
             name="Reload Card list"
-            onPress={() => getCardsList({ userId: '4' })}
+            onPress={() => fetchCardsExample()}
           />
           <FlatList
-            data={cardsList?.cards}
+            data={listCard?.cards}
             renderItem={renderCard}
             keyExtractor={(item, index) => `${item.token}-${index}`}
             contentContainerStyle={styles.listContainer}

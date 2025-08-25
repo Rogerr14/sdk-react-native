@@ -1,3 +1,5 @@
+import type { CardResponse } from "./generic.interface";
+
 export interface AddCardRequest {
   session_id?: string;
   user: UserInfoAdd;
@@ -82,19 +84,7 @@ export interface AddCardResponse {
   "3ds": The3Ds;
 }
 
-export interface CardResponse {
-  number: string;
-  bin: string;
-  type: string;
-  transaction_reference: string;
-  status: string;
-  token: string;
-  expiry_year: string;
-  expiry_month: string;
-  origin: string;
-  bank_name: string;
-  message: string;
-}
+
 
 export interface The3Ds {
   authentication:   Authentication;

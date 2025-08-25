@@ -2,40 +2,45 @@ import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../../routes/navigations';
 import ScreenWrapper from '../../../shared/components/layout/LayoutScreen';
-import { RefundHook } from '../../../../../src/hooks';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { type RefundResponse, refundPayment } from 'nuvei-sdk';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DetailsPayment'>;
 
 export default function DetailsPaymentPage({route, navigation}: Props) {
   const { paymentResponse } = route.params;
-  const {refund,isLoadingRefund, processRefund, errorRefund } = RefundHook()
+  const [refundLoading, setRefundLoading] = useState<boolean>(false);
+  const [refundResponse, setRefundResponse] = useState<RefundResponse|null>(null);
 
   const handleRefund = async () => {
-    console.log(paymentResponse?.transaction?.id)
-    if (!paymentResponse?.transaction?.id) return;
-
+    setRefundLoading(true)
+    
     try {
-      await processRefund({ transaction: {
+       const response = await refundPayment({ transaction: {
         id: paymentResponse.transaction.id
       }});
+
+      setRefundResponse(response)
+      Alert.alert('Refund Success', refundResponse?.status);
     
     } catch (err: any) {
       Alert.alert('Refund Error', err.message || 'Something went wrong.');
+    }finally{
+      setRefundLoading(false)
     }
   };
 
 
-  useEffect(()=>{
-    if(refund){
-        Alert.alert('Refund Success', 'The payment has been refunded successfully.');
-    }else if(errorRefund){
-       Alert.alert('Refund Error', errorRefund.description );
-    }
-  },[refund, errorRefund])
+  // useEffect(()=>{
+  //   if(refund){
+  //       Alert.alert('Refund Success', 'The payment has been refunded successfully.');
+  //   }else if(errorRefund){
+  //      Alert.alert('Refund Error', errorRefund.description );
+  //   }
+  // },[refund, errorRefund])
 
   return (
-    <ScreenWrapper isLoading={isLoadingRefund} loadingText="Processing..."
+    <ScreenWrapper isLoading={refundLoading} loadingText="Processing..."
     
     >
       <View style={styles.container}>
@@ -62,12 +67,12 @@ export default function DetailsPaymentPage({route, navigation}: Props) {
         </View>
 
         <Pressable
-          style={[styles.button, refund && styles.disabledButton]}
-          disabled={refund? true: false}
+          style={[styles.button, refundResponse && styles.disabledButton]}
+          disabled={refundResponse? true: false}
           onPress={handleRefund}
         >
           <Text style={styles.buttonText}>
-            {refund ? 'Refund Done' : 'Refund'}
+            {refundResponse ? 'Refund Done' : 'Refund'}
           </Text>
         </Pressable>
       </View>

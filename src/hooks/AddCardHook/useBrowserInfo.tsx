@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import WebView from "react-native-webview";
-import type { BrowserInfo } from "./addCard.interface";
+import type { BrowserInfo } from "../../services/interfaces/addCard.interface";
 
 // Agrega esto al inicio del componente
 const browserInfoHtml = `
