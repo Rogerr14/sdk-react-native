@@ -19,5 +19,6 @@ export default {
     errorNetwork: 'Error de conexión, intente nuevamente',
     errorException: 'Ocurrió un error, intente nuevamente',
     serverError: 'Error de servidor, contacte al equipo de Nuvei',
+    otpNotValid: 'El código OTP no es válido'
   },
 };

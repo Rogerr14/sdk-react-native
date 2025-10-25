@@ -1,4 +1,4 @@
-export default interface ErrorModel {
+export  interface ErrorModel {
   error: {
     type: string;
     help: string;

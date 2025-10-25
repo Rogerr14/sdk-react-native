@@ -1,3 +1,5 @@
+import type { CardResponse } from "./generic.interface";
+
 export interface AddCardRequest {
   session_id?: string;
   user: UserInfoAdd;
@@ -79,18 +81,35 @@ export interface BillingAddress {
 
 export interface AddCardResponse {
   card: CardResponse;
+  "3ds": The3Ds;
 }
 
-export interface CardResponse {
-  number: string;
-  bin: string;
-  type: string;
-  transaction_reference: string;
-  status: string;
-  token: string;
-  expiry_year: string;
-  expiry_month: string;
-  origin: string;
-  bank_name: string;
-  message: string;
+
+
+export interface The3Ds {
+  authentication:   Authentication;
+  browser_response: BrowserResponse;
+  sdk_response:     SDKResponse;
+}
+
+export interface Authentication {
+  status:         string;
+  return_message: string;
+  version:        string;
+  xid:            string;
+  reference_id:   string;
+  cavv:           null;
+  return_code:    string;
+  eci:            string;
+}
+
+export interface BrowserResponse {
+  challenge_request: string;
+  hidden_iframe:     string;
+}
+
+export interface SDKResponse {
+  acs_trans_id:         string;
+  acs_signed_content:   string;
+  acs_reference_number: string;
 }

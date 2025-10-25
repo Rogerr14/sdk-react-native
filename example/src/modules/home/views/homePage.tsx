@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Image, Pressable, Text, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { homeStyle } from '../styles/homeStyles';
 import ButtonCustom from '../../../shared/components/ButtonComponent/ButtonCustom';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../../routes/navigations';
-import PaymentHook from '../../../../../src/hooks/PaymentHook/PaymentHook';
-import type { CardListItem } from '../../../../../src/hooks';
 import ScreenWrapper from '../../../shared/components/layout/LayoutScreen';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { paymentService, type CardListItem, type PaymentDebitResponse } from 'nuvei-sdk';
 export interface Product {
   quantity: number;
   description: string;
@@ -20,9 +19,11 @@ export interface Product {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomePage() {
+
+  const [payment, setPayment] = useState<PaymentDebitResponse | null>()
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardListItem | null>(null);
   const navigation = useNavigation<NavigationProp>();
-  const { payment, isLoadingPayment, errorPayment, processPayment } = PaymentHook();
 
   const handleCardSelected = (card: CardListItem) => {
     console.log('Card selected:', card); // Para depuración
@@ -30,42 +31,59 @@ export default function HomePage() {
   };
 
   const processPay = async (card: CardListItem) => {
-    await processPayment({
-      user: { id: '4', email: 'test@example.com' },
-      card: card,
-      order: {
-        amount: 99,
-        description: 'pozole',
-        dev_reference: 'referencia',
-        vat: 0,
-        taxable_amount: 0,
-        tax_percentage: 0,
-      },
-    });
+    try {
+      setIsLoadingPayment(true);
+      setPayment(null)
+      const response = await paymentService({
+        user: { id: '4', email: 'test@example.com' },
+        card: card,
+        order: {
+          amount: 99,
+          description: 'pozole',
+          dev_reference: 'referencia',
+          vat: 0,
+          taxable_amount: 0,
+          tax_percentage: 0,
+        },
+      });
+      setPayment(response);
+      Alert.alert('Payment ok', payment?.transaction.message, [
+        {
+          text: 'OK',
+          onPress: () =>
+            navigation.push('DetailsPayment', { paymentResponse: response }),
+        },
+      ]);
+      setSelectedCard(null);
+    } catch (err: any) {
+      console.log(err)      
+    }finally{
+      setIsLoadingPayment(false)
+    }
   
     // console.log(isLoadingPayment);
     // console.log(errorPayment);
 
   };
 
-  useEffect(() => {
-    if (isLoadingPayment) return;
-    if (payment && !errorPayment) {
-      console.log(payment);
-      Alert.alert('Payment ok', 'Payment has been processed successfully.', [
-        { text: 'OK', onPress: () =>  {navigation.push('DetailsPayment', {paymentResponse:payment} )}},
-      ]);
-      setSelectedCard(null);
-    }
+  // useEffect(() => {
+  //   if (isLoadingPayment) return;
+  //   if (payment && !errorPayment) {
+  //     console.log(payment);
+  //     Alert.alert('Payment ok', 'Payment has been processed successfully.', [
+  //       { text: 'OK', onPress: () =>  {navigation.push('DetailsPayment', {paymentResponse:payment} )}},
+  //     ]);
+  //     setSelectedCard(null);
+  //   }
 
-    if (errorPayment) {
-      Alert.alert(
-        'Payment Error',
-        `Error: ${errorPayment.type}\n${errorPayment.description}`,
-        [{ text: 'OK', onPress: () => console.log('Error OK Pressed') }]
-      );
-    }
-  }, [payment, errorPayment, isLoadingPayment]);
+  //   if (errorPayment) {
+  //     Alert.alert(
+  //       'Payment Error',
+  //       `Error: ${errorPayment.type}\n${errorPayment.description}`,
+  //       [{ text: 'OK', onPress: () => console.log('Error OK Pressed') }]
+  //     );
+  //   }
+  // }, [payment, errorPayment, isLoadingPayment]);
 
   const dataProducts: Product[] = [
     {
@@ -95,7 +113,7 @@ export default function HomePage() {
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 20 }}>
-      <ScreenWrapper isLoading={isLoadingPayment} loadingText="Procesando pago...">
+      <ScreenWrapper isLoading={isLoadingPayment} loadingText="Procesing payment...">
         {/* <View style={{padding:30, flex: 1}}> */}
 
         <FlatList
@@ -121,10 +139,21 @@ export default function HomePage() {
         >
           {selectedCard ? (
             <>
-              <Text>Tarjeta seleccionada</Text>
-              <Text>Titular: {selectedCard.holder_name}</Text>
-              <Text>Número: {selectedCard.number}</Text>
-              <Text>Tipo: {selectedCard.type}</Text>
+            <View style={{flexDirection:'row', alignItems:'center', gap:20}}>
+            <Image
+        style={{ width: 40, height: 25, resizeMode: 'contain'}}
+        source={{
+          uri:
+            selectedCard.image ??
+            'https://github.com/paymentez/paymentez-ios/blob/master/PaymentSDK/PaymentAssets.xcassets/stp_card_unknown.imageset/stp_card_unknown@3x.png?raw=true',
+        }}
+      />
+            <View>
+              <Text>Name: {selectedCard.holder_name}</Text>
+              <Text>Number: {selectedCard.number}</Text>
+              <Text>Tye: {selectedCard.type}</Text>
+            </View>
+            </View>
             </>
           ) : (
             <>
